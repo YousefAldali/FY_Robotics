@@ -1,0 +1,84 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/apartment_structure/protos/Wall.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  orientation -0.5798872378794687 0.566275926778356 0.5857152602552153 2.1024934761482146
+  position -2.1223256670653647 1.4805004258844168 44.52441274248055
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 20 20
+}
+Wall {
+  translation -4.96 1.86998 0
+  rotation 0 0 1 1.5708
+  name "leftSepwall"
+  size 0.2 6 2.4
+}
+Wall {
+  translation 4.96 2.99998 0
+  rotation 0 0 1 1.5708
+  name "rightSepwall"
+  size 0.2 6 2.4
+}
+Wall {
+  translation 0 -8 0
+  rotation 0 0 1 1.5707996938995747
+  name "BottomWall"
+  size 0.2 16.2 2.4
+}
+Wall {
+  translation 0 8 0
+  rotation 0 0 1 1.5707996938995747
+  name "TopWall"
+  size 0.2 16.2 2.4
+}
+Wall {
+  translation 2 -0.45 0
+  name "corridorRight"
+  size 0.2 15 2.4
+}
+Wall {
+  translation -8 0 0
+  name "OuterLeft"
+  size 0.2 16 2.4
+}
+Wall {
+  translation 8 0 0
+  name "OuterRight"
+  size 0.2 16 2.4
+}
+Wall {
+  translation -2 -0.43 0
+  name "corridorLeft"
+  size 0.2 15 2.4
+}
+Wall {
+  translation 2.61 6.96 0
+  rotation 0 0 1 1.5708
+  name "kitchenWall_1(1)"
+  size 0.2 1.4 2.4
+}
+Wall {
+  translation -2.65 6.96 0
+  rotation 0 0 1 1.5708
+  name "kitchenWall_1(2)"
+  size 0.2 1.4 2.4
+}
+Wall {
+  translation 3.2 7.55 0
+  name "kitchenWall_1"
+}
+Wall {
+  translation -3.25 7.55 0
+  name "kitchenWall_1(3)"
+}
