@@ -259,6 +259,7 @@ Pioneer3dx {
   rotation 0 0 1 -1.5707996938995747
   extensionSlot [
     InertialUnit {
+      name "imu"
     }
     Lidar {
       fieldOfView 3.14
