@@ -258,6 +258,8 @@ Pioneer3dx {
   translation 0.0212056 6.73992 0.0917699
   rotation 0 0 1 -1.5707996938995747
   extensionSlot [
+    InertialUnit {
+    }
     Lidar {
       fieldOfView 3.14
       maxRange 30
