@@ -259,6 +259,8 @@ Pioneer3dx {
   rotation 0 0 1 -1.5707996938995747
   extensionSlot [
     Lidar {
+      fieldOfView 3.14
+      maxRange 30
     }
   ]
 }

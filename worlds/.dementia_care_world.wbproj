@@ -6,7 +6,7 @@ maximizedDockId: -1
 centralWidgetVisible: 1
 orthographicViewHeight: 1
 textFiles: -1
-globalOptionalRendering: CoordinateSystem
+globalOptionalRendering: CoordinateSystem::LidarRaysPaths::LidarPointClouds
 consoles: Console:All:All
 renderingDevicePerspectives: mirror:camera;0;1;0;0
 renderingDevicePerspectives: mirror:display;0;1;0;0
