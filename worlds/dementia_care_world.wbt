@@ -12,12 +12,13 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/oven/protos/Oven.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/components/protos/Sink.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/components/protos/HotPlate.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/adept/pioneer3/protos/Pioneer3dx.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.38746407365965063 0.43718768921626316 0.8116270794033507 1.6586652022140775
-  position 4.36415236997092 -3.21797183160085 10.48207748517346
+  orientation -0.49353293879047766 0.5085661615000076 0.7055392956497765 1.8843229390763812
+  position -0.254453362899717 -10.09315397138998 28.04259412654067
 }
 TexturedBackground {
 }
@@ -25,6 +26,10 @@ TexturedBackgroundLight {
 }
 RectangleArena {
   floorSize 20 20
+}
+Pioneer3dx {
+  translation -8.56466e-07 7.54 0.0975
+  rotation 0 0 1 -1.5707953071795862
 }
 Worktop {
   translation 7.53 4.06 0.53
