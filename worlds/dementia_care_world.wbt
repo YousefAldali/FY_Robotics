@@ -13,19 +13,272 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/components/protos/Sink.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/components/protos/HotPlate.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/adept/pioneer3/protos/Pioneer3dx.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/tables/protos/Table.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/tables/protos/RoundTable.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/living_room_furniture/protos/Sofa.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/television/protos/Television.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/chairs/protos/Chair.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/utensils/protos/Plate.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/bathroom/protos/Toilet.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/bathroom/protos/BathroomSink.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/bathroom/protos/Bathtube.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/living_room_furniture/protos/Armchair.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/living_room_furniture/protos/Carpet.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/plants/protos/BunchOfSunFlowers.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/apartment_structure/protos/Window.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/mirror/protos/Mirror.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/bathroom/protos/WashingMachine.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/utensils/protos/Fork.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/appearances/protos/Parquetry.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.5054442176569505 0.666838060176522 0.5475884808295062 1.890342678281774
-  position 5.137970218145459 -6.227276908971199 30.327327284300104
+  orientation 0.533413209290983 0.6381513316737817 -0.5551875593318651 1.9690039970823707
+  position 2.16131879087998 5.8344211298490345 25.191653301090412
 }
 TexturedBackground {
 }
 TexturedBackgroundLight {
 }
 RectangleArena {
+  translation 0 0 0.01
   floorSize 20 20
+  floorAppearance Parquetry {
+    type "dark strip"
+  }
+}
+Door {
+  hidden translation_5 0.36440676803547867 -0.9242835828522789 0
+  hidden rotation_5 0 0 -0.9999999999999999 3.000298536042503
+  hidden linearVelocity_5 7.811851016112083e-11 -1.767392468309632e-10 -5.671231651805264e-06
+  hidden angularVelocity_5 -2.226062910936686e-06 -1.9704837155003662e-07 -1.271989552392444e-10
+  translation 1.98001 0.950018 0
+  rotation 0 0 1 -3.1415853071795863
+  name "door(1)"
+  position -1.0002985360425038
+}
+Door {
+  hidden translation_5 0.36440676803547867 -0.9242835828522789 1.1102230246251565e-16
+  hidden rotation_5 0 0 -1 3.000298536042503
+  hidden linearVelocity_5 7.811843352379243e-11 -1.7673787417349602e-10 -5.671231651851886e-06
+  hidden angularVelocity_5 -2.2260629108765293e-06 -1.9704837156135224e-07 -1.2719879700560098e-10
+  translation 1.98001 4.66 0
+  rotation 0 0 1 -3.1415853071795863
+  name "door(2)"
+  position -1.0002985360425036
+}
+Door {
+  hidden translation_5 0.3644067053913121 -0.9242836127472747 0
+  hidden rotation_5 0 0 -1 3.0002986754737377
+  translation -1.99999 4.64 0
+  rotation 0 0 -1 -5.307179586466759e-06
+  name "door(4)"
+  position -1.0002986754737382
+}
+Door {
+  hidden translation_5 0.3644067053913123 -0.9242836127472747 -2.220446049250313e-16
+  hidden rotation_5 0 0 -1 3.0002986754737373
+  translation -1.99999 -0.31 0
+  rotation 0 0 -1 -5.307179586466759e-06
+  name "door(3)"
+  position -1.0002986754737377
+}
+Wall {
+  translation -2 -4.45 0
+  name "corridorLeft(2)"
+  size 0.2 7.2 2.4
+}
+Wall {
+  translation -2 2.15 0
+  name "corridorLeft(1)"
+  size 0.2 4 2.4
+}
+Wall {
+  translation 2 6.01 0
+  name "corridorRight(2)"
+  size 0.2 1.75 2.4
+}
+Fork {
+  hidden linearVelocity_0 -1.7567141350012187e-13 -3.299440823560162e-17 8.041425303417343e-12
+  hidden angularVelocity_0 2.9822126037341365e-15 -1.874369918046203e-11 -5.768124208998977e-17
+  translation 7.289990708905683 4.6000000000566 1.031139848855182
+  rotation 7.140865076066512e-10 -0.9999999999999785 2.0707748530292713e-07 0.006892918281340414
+}
+WashingMachine {
+  translation -7.49 7.4 0.53
+  rotation 0 0 1 -1.5707953071795862
+}
+Worktop {
+  translation -7.19 7.61 0.81
+  name "worktop(16)"
+}
+Worktop {
+  translation -6.49 7.62 0.8
+  name "worktop(15)"
+}
+Worktop {
+  translation -5.08 7.63 0.83
+  name "worktop(14)"
+}
+Worktop {
+  translation -4.38 7.63 0.85
+  name "worktop(13)"
+}
+Worktop {
+  translation -3.7 7.65 0.84
+  name "worktop(12)"
+}
+Mirror {
+  translation -6.18 7.66 1.58004
+  rotation 0.5773499358549823 0.5773519358547601 -0.5773489358550934 2.0944
+}
+RoundTable {
+  translation -6.85 -2.72 0
+  name "round table(1)"
+}
+Armchair {
+  translation 3.30312 -6.81312 0
+  rotation 0 0 1 0.785398
+  name "armchair(1)"
+}
+Window {
+  translation 4.45 -7.99 0
+  rotation 0 0 1 -1.5707953071795862
+  name "window(4)"
+}
+Window {
+  translation 5.79 8.02 0.59
+  rotation 0 0 1 1.5708
+  name "window(3)"
+}
+Window {
+  translation -5.7 -7.97 0
+  rotation 0 0 1 1.5708
+  name "window(2)"
+}
+Window {
+  translation -7.95 -1.12 0
+  name "window(1)"
+}
+Window {
+  translation 4.99606e-07 -8.04 0
+  rotation 0 0 1 -1.5707953071795862
+}
+BunchOfSunFlowers {
+  translation 6.58 1.38 0.91
+}
+Table {
+  translation 4.21 -4.76 0
+  rotation 0 0 1 4.692820414042842e-06
+  name "table(2)"
+}
+Carpet {
+  translation -4.17 4.72 0
+}
+Armchair {
+  translation 3.17592 -2.75503 0
+  rotation 0 0 1 -0.785395307179586
+}
+Bathtube {
+  translation -6.86001 2.52 0
+  rotation 0 0 1 1.5708
+}
+BathroomSink {
+  translation -5.79 7.84 0.77
+  rotation 0 0 1 -1.5707953071795862
+  name "sink(1)"
+}
+Toilet {
+  translation -7.29 4.59 0
+}
+Plate {
+  hidden linearVelocity_0 1.3329481503010232e-18 -4.2432445265852016e-18 1.657165663952299e-11
+  hidden angularVelocity_0 5.256580557202068e-16 5.4738991512484604e-17 1.9640971914455024e-19
+  translation 6.76 0.97 0.00988227999788038
+  rotation 0.6711435622185609 0.5448004003304859 0.5027512731881667 4.489544136762869e-17
+  name "plate(2)"
+}
+Plate {
+  hidden linearVelocity_0 -5.849321434177314e-18 -6.045804508444169e-18 4.823637785496728e-13
+  hidden angularVelocity_0 1.2547737330258304e-15 -8.365158220172202e-16 1.3268155003698533e-17
+  translation 6.29 1.87 0.7399411399999383
+  rotation 0.9786268548932021 0.20561891896355325 -0.003215438710269843 9.357049440477984e-16
+  name "plate(1)"
+}
+Plate {
+  hidden linearVelocity_0 -3.016910148857477e-21 -1.0609596341767032e-18 1.579678610141889e-11
+  hidden angularVelocity_0 1.692167912348372e-16 2.7620122300262492e-17 -4.6482244596212725e-18
+  translation 6.21 0.89 0.009882279997979498
+  rotation 0.8117367336021776 0.5592163283805895 -0.168405977902805 6.670583026789082e-17
+}
+Chair {
+  translation 7.31 1.92998 0
+  rotation 0 0 1 3.14159
+  name "chair(3)"
+}
+Chair {
+  translation 5.71 1.88 0
+  name "chair(2)"
+}
+Chair {
+  translation 7.3 0.99998 0
+  rotation 0 0 1 3.14159
+  name "chair(1)"
+}
+Chair {
+  translation 5.65 0.98 0
+}
+Table {
+  translation 6.52 1.43 0
+  name "table(1)"
+}
+Television {
+  translation 7.33 -6.86 1.1
+}
+Sofa {
+  translation 2.66 -4.81 0
+}
+RoundTable {
+  translation -6.67 -6.66 0
+}
+Table {
+  translation 7.36 -6.89 0
+}
+Cabinet {
+  hidden position_6_0 6.406124403655692e-06
+  hidden translation_7 -2.548378715045774e-06 -1.631716983752085e-11 0
+  hidden rotation_7 0 0 1 1.2805916095975016e-05
+  hidden linearVelocity_7 -5.689183533006093e-15 -2.7843033263775066e-15 -4.4606123681168946e-10
+  hidden angularVelocity_7 -2.906710696333302e-12 9.566312213035497e-11 -2.0168728858466597e-17
+  hidden position_10_0 -5.4461696483823935e-06
+  hidden translation_11 -1.8415295347009853e-06 1.0024314711643001e-11 0
+  hidden rotation_11 0 0 -1 1.088694786211613e-05
+  hidden linearVelocity_11 5.63593430899795e-15 -2.781093578379481e-15 -4.400873389466612e-10
+  hidden angularVelocity_11 -2.906408187872357e-12 -8.131600435492115e-11 1.3053730804067956e-17
+  hidden position_14_0 -1.2247356537766842e-35
+  hidden translation_15 -1.8505611311622324e-35 0 0
+  hidden linearVelocity_15 -4.443251062898655e-35 4.35777201220393e-29 -4.338799781918069e-10
+  hidden angularVelocity_15 3.28989680929567e-30 5.133499796768589e-27 2.0659745066268927e-16
+  hidden position_22_0 -1.224735653806633e-35
+  hidden translation_23 -1.8505611312157786e-35 0 0
+  hidden linearVelocity_23 -4.443251062992314e-35 4.357772012295786e-29 -4.338796094777297e-10
+  hidden angularVelocity_23 3.289896809352375e-30 5.13349980786709e-27 2.0659745066268927e-16
+  hidden position_30_0 -1.2247356537682816e-35
+  hidden translation_31 -1.8505611311485596e-35 0 0
+  hidden linearVelocity_31 -4.443251062851936e-35 4.3577720121581087e-29 -4.338796094777297e-10
+  hidden angularVelocity_31 3.289896809254563e-30 5.133499802899596e-27 2.0659745066268927e-16
+  hidden position_38_0 -2.548774781502791e-35
+  hidden translation_39 -3.8511699332517616e-35 0 0
+  hidden linearVelocity_39 -1.107384865097257e-34 1.086081048211324e-28 -9.013866746228354e-10
+  hidden angularVelocity_39 3.288098334389873e-30 6.898158659774299e-27 2.0659745066268927e-16
+  translation -6.8 1.7 0
+  rotation 0 0 1 -1.5707953071795862
+  name "cabinet(1)"
+}
+Bed {
+  translation -6.65 -4.7 0
+  name "bed(1)"
 }
 Wall {
   translation 0.88 -2.35 0
@@ -40,20 +293,16 @@ Wall {
   size 0.2 0.7 2.4
 }
 Pioneer3dx {
-  hidden position_0_0 -60.0690785204516
-  hidden position_0_1 51941.9489283512
-  hidden position_0_2 50054.69880873982
-  hidden translation_1 -0.1918 0 0
-  hidden rotation_1 0.7216716306488143 0.4894844162089848 0.4894844878085827 1.891346442663736
-  hidden position_1_0 -73085.20310151795
-  hidden translation_2 0 -0.0521014 0.012843
-  hidden rotation_2 0.9999999999999999 0 0 0.808391594997154
-  hidden translation_4 0 0.165 0
-  hidden rotation_4 -0.6989493225322829 0.6989493548981621 0.1514583897283533 3.44222463104595
-  hidden translation_9 0 -0.165 0
-  hidden rotation_9 -0.511160309016855 0.5111603800824815 -0.6909632438268526 1.9323221502523253
-  translation 0 6.97994 0.163798
-  rotation 0 0 1 -1.5707996938995747
+  hidden position_0_0 -0.3029364870672815
+  hidden position_0_1 13.381979669743227
+  hidden position_0_2 13.381965865980337
+  hidden rotation_1 0.5772530753505528 -0.5773988599695953 -0.5773988599782135 2.0945407968900756
+  hidden position_1_0 -32.61996122482857
+  hidden rotation_2 1 0 0 5.079150618248947
+  hidden rotation_4 0.3557898956422665 -0.3557898655872148 -0.8641916001120913 1.7162414916211384
+  hidden rotation_9 0.5876281695827732 -0.5876282372036412 0.5562249447424493 4.156812397570782
+  translation 0.0212056 6.73992 0.0917699
+  rotation -0.017499401315451534 -0.016336387713170007 -0.9997134056268756 1.6401526908681698
 }
 Worktop {
   translation 7.53 4.06 0.53
@@ -61,7 +310,10 @@ Worktop {
   size 0.7 0.62 1
 }
 Oven {
+  hidden position_0_0 6.10637582583594e-20
   hidden translation_1 0.25 0 0.19
+  hidden linearVelocity_1 -3.546390526285864e-25 3.1751213987871e-25 -2.042292155786399e-09
+  hidden angularVelocity_1 -9.065553654591175e-25 -1.013254464422769e-24 1.0978391012991576e-21
   translation 7.41 3.53 0
   rotation 0 0 1 3.14159
 }
@@ -88,10 +340,16 @@ Bed {
   rotation 0 0 1 -1.5707953071795862
 }
 Fridge {
+  hidden position_0_0 -4.394871759738057e-05
+  hidden position_0_1 4.394871778970802e-05
   hidden translation_1 0.36 0.34 1.55
-  hidden rotation_1 0 0 -1 0.00013171646423372518
+  hidden rotation_1 0 0 -1 8.785420344317057e-05
+  hidden linearVelocity_1 9.9251343052023e-15 -2.727788065685221e-12 -2.0931079802722033e-09
+  hidden angularVelocity_1 -2.791743832104198e-14 -6.524392071428665e-10 7.79335904137682e-12
   hidden translation_2 0.36 0.34 0.65
-  hidden rotation_2 0 0 1 0.0001317165114354768
+  hidden rotation_2 0 0 0.9999999999999999 8.785422366254046e-05
+  hidden linearVelocity_2 1.2680917323750312e-14 2.874065534459074e-12 -2.0929339257235975e-09
+  hidden angularVelocity_2 2.7976826754135502e-14 -6.51944048660121e-10 -8.211274496381253e-12
   translation 3.65 7.53 0
   rotation 0 0 1 -1.5707953071795862
 }
@@ -140,21 +398,33 @@ Worktop {
   size 0.7 0.62 1
 }
 Door {
-  hidden translation_5 -0.21991039909667487 -0.8081550639569193 0
-  hidden rotation_5 0 0 1 1.9999999999999998
+  hidden translation_5 0.3644737013343259 -0.9242516348728789 0
+  hidden rotation_5 0 0 -1 3.0001495529032716
+  hidden linearVelocity_5 -3.7399088877149804e-13 2.214551178682491e-12 -5.5436673906874085e-09
+  hidden angularVelocity_5 -1.922299866732755e-10 2.1690567730685793e-09 4.574528334532442e-12
   translation -0.69999 -2.36 0
   rotation 0 0 1 1.5708
-  position 2
+  position -1.0001495529032722
 }
 Cabinet {
-  hidden translation_7 -3.820679876119364e-06 -3.667741110824352e-11 0
-  hidden rotation_7 0 0 1 1.9199404595385112e-05
-  hidden translation_11 -2.7609298160178502e-06 2.253250364070425e-11 0
-  hidden rotation_11 0 0 -1 1.632237038948595e-05
+  hidden position_6_0 6.406124403646548e-06
+  hidden translation_7 -2.548378715037846e-06 -1.631716983752085e-11 0
+  hidden rotation_7 0 0 1 1.2805916095975016e-05
+  hidden linearVelocity_7 2.7839278739829917e-15 -5.689195427452349e-15 -4.4606092275964944e-10
+  hidden angularVelocity_7 -9.566342804931545e-11 -2.906637275955142e-12 -1.850367681437844e-17
+  hidden position_10_0 -5.446169648382597e-06
+  hidden translation_11 -1.8415295347010198e-06 1.0024314711643001e-11 0
+  hidden rotation_11 0 0 -1 1.088694786211613e-05
+  hidden linearVelocity_11 2.781104592539942e-15 5.6359340797306436e-15 -4.40087213325832e-10
+  hidden angularVelocity_11 8.131599081259621e-11 -2.9064902663522583e-12 1.3111351921757885e-17
   hidden translation_15 0 0 0
+  hidden linearVelocity_15 0 0 -4.338799781918077e-10
   hidden translation_23 0 0 0
+  hidden linearVelocity_23 0 0 -4.338796094777293e-10
   hidden translation_31 0 0 0
+  hidden linearVelocity_31 0 0 -4.338796094777293e-10
   hidden translation_39 0 0 0
+  hidden linearVelocity_39 0 0 -9.013866746227854e-10
   translation -1.87 -6.92 0
 }
 Wall {
@@ -182,9 +452,14 @@ Wall {
   size 0.2 16.2 2.4
 }
 Wall {
-  translation 2 -0.45 0
+  translation 2 2.8 0
   name "corridorRight"
-  size 0.2 15 2.4
+  size 0.2 2.75 2.4
+}
+Wall {
+  translation 2 -3.75 0
+  name "corridorRight(1)"
+  size 0.2 8.5 2.4
 }
 Wall {
   translation -8 0 0
@@ -197,9 +472,9 @@ Wall {
   size 0.2 16 2.4
 }
 Wall {
-  translation -2 -0.43 0
+  translation -2 6.1 0
   name "corridorLeft"
-  size 0.2 15 2.4
+  size 0.2 1.9 2.4
 }
 Wall {
   translation 2.61 6.96 0
