@@ -25,12 +25,32 @@ right_encoder = robot.getPositionSensor('right wheel sensor')
 left_encoder.enable(TIME_STEP)
 right_encoder.enable(TIME_STEP)
 
+# --------------- LIDAR Setup -----------------
+# Initialise LIDAR
+lidar = robot.getDevice('lidar')
+lidar.enable(TIME_STEP)
 
+lidar.enablePointCloud()
 
+# --------------- Main Loop -----------------
 while robot.step(TIME_STEP) != -1:
+    t = robot.getTime()
+    
     left_val = left_encoder.getValue()
     right_val = right_encoder.getValue()
 
-    t = robot.getTime()
-    if int(t*2) % 2 == 0:
-        print(f"[TIME {t:.2f} s] Left Encoder: {left_val:.4f} rad, Right Encoder: {right_val:.4f} rad")
+    ranges = lidar.getRangeImage()
+    min_range = None
+    center_range = None
+    if ranges and len(ranges) > 0:
+        min_range = min(ranges)
+        center_index = len(ranges) // 2
+        center_range = ranges[center_index]
+
+    if int(t * 2) % 2 == 0:
+        print(f"time={t:2f}s")
+        print(f"   encoders: left={left_val:.2f}, right={right_val:.2f} rad")
+        if min_range is not None:
+            print(f"  Lidar: min={min_range:.2f} m, center={center_range:.2f} m")
+        else:
+            print("  Lidar: No data")
