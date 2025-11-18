@@ -107,7 +107,7 @@ while robot.step(TIME_STEP) != -1:
         
     if int(t * 2) % 2 == 0:
         print(f"time={t:2f}s")
-        print(f"   pose: x={x:.2f} m, y={y:.2f} m, theta={theta:.2f} rad")
+        print(f"   pose: x={x:.2f} m, y={y:.2f} m, theta={theta*180/math.pi:.1f} deg")
         print(f"   encoders: left={left_val:.2f}, right={right_val:.2f} rad")
         if min_range is not None:
             print(f"  Lidar: min={min_range:.2f} m, center={center_range:.2f} m")
