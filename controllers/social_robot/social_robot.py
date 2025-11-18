@@ -1,3 +1,4 @@
+import math
 from controller import Robot
 
 robot = Robot()
@@ -32,6 +33,17 @@ lidar.enable(TIME_STEP)
 
 lidar.enablePointCloud()
 
+# --------------- IMU Setup -----------------
+# Initialise IMU
+imu = None
+
+try: 
+    imu = robot.getDevice('imu')
+    imu.enable(TIME_STEP)
+    print("[INFO] IMU found and enabled.")
+except:
+    print("[WARN] IMU not found on this robot model.")
+
 # --------------- Main Loop -----------------
 while robot.step(TIME_STEP) != -1:
     t = robot.getTime()
@@ -46,11 +58,17 @@ while robot.step(TIME_STEP) != -1:
         min_range = min(ranges)
         center_index = len(ranges) // 2
         center_range = ranges[center_index]
-
+    
+    yaw_deg = None
+    if imu is not None:
+        roll, pitch, yaw = imu.getRollPitchYaw()
+        yaw_deg = yaw * (180.0 / math.pi)
+        
     if int(t * 2) % 2 == 0:
         print(f"time={t:2f}s")
         print(f"   encoders: left={left_val:.2f}, right={right_val:.2f} rad")
         if min_range is not None:
             print(f"  Lidar: min={min_range:.2f} m, center={center_range:.2f} m")
-        else:
-            print("  Lidar: No data")
+        if yaw_deg is not None:
+            print(f"     IMU: yaw={yaw_deg:.2f} degrees")
+        
