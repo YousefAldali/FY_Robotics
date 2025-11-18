@@ -86,6 +86,22 @@ def update_odometry():
 # --------------- Main Loop -----------------
 while robot.step(TIME_STEP) != -1:
     t = robot.getTime()
+    
+    if t < 5.0:
+        v_left = 3.0
+        v_right = 3.0
+        phase = "Forward"
+    elif t < 10.0:
+        v_left = 2.0
+        v_right = -2.0
+        phase = "Turning"
+    else:
+        v_left = 0.0
+        v_right = 0.0
+        phase = "Stopped"
+
+    left_motor.setVelocity(v_left)
+    right_motor.setVelocity(v_right)
 
     update_odometry()
     
@@ -105,12 +121,14 @@ while robot.step(TIME_STEP) != -1:
         roll, pitch, yaw = imu.getRollPitchYaw()
         yaw_deg = yaw * (180.0 / math.pi)
         
-    if int(t * 2) % 2 == 0:
-        print(f"time={t:2f}s")
-        print(f"   pose: x={x:.2f} m, y={y:.2f} m, theta={theta*180/math.pi:.1f} deg")
-        print(f"   encoders: left={left_val:.2f}, right={right_val:.2f} rad")
+    if int(t) != int(t - TIME_STEP / 1000.0):
+        print(f"----  Time: {t:.2f} s  ----")
+        print(f"Phase: {phase}")
+        print(f"Odometry: x={x:.2f} m, y={y:.2f} m, theta={theta*180/math.pi:.1f} deg")
+        print(f"Encoders: left={left_val:.2f} rad, right={right_val:.2f} rad")
         if min_range is not None:
-            print(f"  Lidar: min={min_range:.2f} m, center={center_range:.2f} m")
+            print(f"Lidar: min={min_range:.2f} m, center={center_range:.2f} m")
         if yaw_deg is not None:
-            print(f"     IMU: yaw={yaw_deg:.2f} degrees")
+            print(f"IMU: yaw={yaw_deg:.2f} degrees")
+        print("-------------------------")
         
