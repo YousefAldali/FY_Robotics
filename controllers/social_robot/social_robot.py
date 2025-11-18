@@ -6,6 +6,9 @@ TIME_STEP = int(robot.getBasicTimeStep())
 
 print("[INFO] Social Python Controller Initialized with TIME_STEP =", TIME_STEP)
 
+WHEEL_RADIUS = 0.0975 # in meters
+AXLE_LENGTH = 0.33  # in meters
+
 # --------------- Robot Motors Setup -----------------
 # Initialise motors
 left_motor = robot.getDevice('left wheel')
@@ -44,9 +47,47 @@ try:
 except:
     print("[WARN] IMU not found on this robot model.")
 
+
+# --------------- Odometry Variables -----------------
+prev_left = 0.0
+prev_right = 0.0
+x = 0.0
+y = 0.0
+theta = 0.0
+first_step = True
+
+def update_odometry():
+    global prev_left, prev_right, x, y, theta, first_step
+
+    left_val = left_encoder.getValue()
+    right_val = right_encoder.getValue()
+    if first_step:
+        prev_left = left_val
+        prev_right = right_val
+        first_step = False
+        return
+    
+    d_left = left_val - prev_left
+    d_right = right_val - prev_right
+    prev_left = left_val
+    prev_right = right_val
+
+    dl_distance = d_left * WHEEL_RADIUS
+    dr_distance = d_right * WHEEL_RADIUS
+
+    d_center = (dl_distance + dr_distance) / 2.0
+    d_theta = (dr_distance - dl_distance) / AXLE_LENGTH
+
+    theta_mid = theta + d_theta / 2.0
+    x += d_center * math.cos(theta_mid)
+    y += d_center * math.sin(theta_mid)
+    theta += d_theta
+
 # --------------- Main Loop -----------------
 while robot.step(TIME_STEP) != -1:
     t = robot.getTime()
+
+    update_odometry()
     
     left_val = left_encoder.getValue()
     right_val = right_encoder.getValue()
@@ -66,6 +107,7 @@ while robot.step(TIME_STEP) != -1:
         
     if int(t * 2) % 2 == 0:
         print(f"time={t:2f}s")
+        print(f"   pose: x={x:.2f} m, y={y:.2f} m, theta={theta:.2f} rad")
         print(f"   encoders: left={left_val:.2f}, right={right_val:.2f} rad")
         if min_range is not None:
             print(f"  Lidar: min={min_range:.2f} m, center={center_range:.2f} m")
