@@ -1,4 +1,23 @@
-| Test ID | Category                | What We’re Checking                          | Description (What We actually do)                                                                 | What We Expect to Happen                                                            | What We Measure                                           |
+# FY Robotics
+
+## Requirements
+
+- Python 3.11
+- Numpy
+- Matplotlib
+- BreezySLAM
+
+### Installing BreezySLAM
+
+```bash
+git clone https://github.com/simondlevy/BreezySLAM
+cd BreezySLAM/python
+sudo python3 setup.py install
+```
+
+## Test Plan
+
+| Test ID | Category                | What We're Checking                          | Description (What We actually do)                                                                 | What We Expect to Happen                                                            | What We Measure                                           |
 |---------|--------------------------|----------------------------------------------|-----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|-----------------------------------------------------------|
 | T1      | Mapping (SLAM)           | How good our LiDAR map is                    | We let the robot explore a simple room and build an occupancy grid using LiDAR + odometry.          | The map should look close to the real room, without big errors or distortion.       | Map accuracy, drift, number of scans                      |
 | T2      | Localisation             | How stable the robot’s position estimate is  | We drive the robot down a corridor and watch how consistent its SLAM localisation stays.            | Position should stay stable — no sudden “teleporting” jumps.                        | Error in (x, y, θ) and drift over time                    |
