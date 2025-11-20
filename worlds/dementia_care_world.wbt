@@ -257,7 +257,7 @@ Pioneer3dx {
     }
     Lidar {
       fieldOfView 3.14
-      maxRange 30
+      maxRange 20
     }
   ]
 }
@@ -341,7 +341,7 @@ Worktop {
   size 0.7 0.62 1
 }
 Door {
-  hidden translation_5 0.28088197784945723 -0.00530813846343936 -4.440892098500626e-16
+  hidden translation_5 0.28088197784945723 -0.005308138463439471 -4.440892098500626e-16
   hidden rotation_5 0 0 1 0.5700000000000007
   translation -0.69999 -2.36 0
   rotation 0 0 1 1.5708

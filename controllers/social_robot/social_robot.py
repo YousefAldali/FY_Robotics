@@ -1,8 +1,30 @@
 import math
+import os
 from controller import Robot
+import numpy as np
+from breezyslam.algorithms import RMHC_SLAM
+from breezyslam.sensors import Laser
+import matplotlib
+
+import matplotlib.pyplot as plt
 
 robot = Robot()
 TIME_STEP = int(robot.getBasicTimeStep())
+
+matplotlib.use("Agg")
+
+# --------------- Configuration -----------------
+
+# Save final map and video frames
+SAVE_FINAL_MAP = True
+SAVE_VIDEO_FRAMES = False
+
+FRAMES_DIR = "slam_frames"
+if SAVE_VIDEO_FRAMES and not os.path.exists(FRAMES_DIR):
+    os.makedirs(FRAMES_DIR)
+
+map_saved = False
+frame_index = 0
 
 print("[INFO] Social Python Controller Initialized with TIME_STEP =", TIME_STEP)
 
@@ -29,12 +51,131 @@ right_encoder = robot.getPositionSensor('right wheel sensor')
 left_encoder.enable(TIME_STEP)
 right_encoder.enable(TIME_STEP)
 
+# --------------- Pose Estimator Class -----------------
+class PoseEstimator:
+    def __init__(self, wheel_radius, axle_length):
+        self.wheel_radius = wheel_radius
+        self.axle_length = axle_length
+
+        self.prev_left = None
+        self.prev_right = None
+
+        self.x = 0.0
+        self.y = 0.0
+        self.theta = 0.0 # in radians
+
+    def update_from_encoders(self, left_val, right_val):
+        if self.prev_left is None:
+            self.prev_left = left_val
+            self.prev_right = right_val
+            return 0.0, 0.0, 0.0
+        
+        d_left = left_val - self.prev_left
+        d_right = right_val - self.prev_right
+
+        self.prev_left = left_val
+        self.prev_right = right_val
+
+        d_left_m = d_left * self.wheel_radius
+        d_right_m = d_right * self.wheel_radius
+
+        d_center = (d_left_m + d_right_m) / 2.0
+        d_theta = (d_right_m - d_left_m) / self.axle_length
+
+        theta_mid = self.theta + d_theta / 2.0
+        self.x += d_center * math.cos(theta_mid)
+        self.y += d_center * math.sin(theta_mid)
+        self.theta += d_theta
+
+        self.theta = (self.theta + math.pi) % (2 * math.pi) - math.pi
+
+        return d_center, 0.0, d_theta
+    
+    def get_pose(self):
+        return self.x, self.y, self.theta
+    
+class WebotsLidar(Laser):
+    def __init__(self, lidar_device, time_step_ms):
+        n_beams = lidar_device.getHorizontalResolution()
+        fov_rad = lidar_device.getFov()
+        fov_deg = math.degrees(fov_rad)
+
+        max_range_m = lidar_device.getMaxRange()
+        max_range_mm = int(max_range_m * 1000)
+
+        scan_rate_hz = 1000.0 / float(time_step_ms)
+
+        super().__init__ (n_beams, scan_rate_hz, fov_deg, max_range_mm)
+
+        self.max_range_m = max_range_m
+
+
+
+class SlamBackend:
+    def __init__ (self, lidar_device, time_step_ms):
+        self.lidar_model = WebotsLidar(lidar_device, time_step_ms)
+        self.max_range_m = self.lidar_model.max_range_m
+        
+        self.MAP_SIZE_PIXELS = 800
+        self.MAP_SIZE_METERS = 20
+
+        self.slam = RMHC_SLAM(self.lidar_model,
+                         self.MAP_SIZE_PIXELS,
+                         self.MAP_SIZE_METERS)
+        
+        self.mapbytes = bytearray(self.MAP_SIZE_PIXELS * self.MAP_SIZE_PIXELS)
+
+        self.x_mm = 0
+        self.y_mm = 0
+        self.theta_deg = 0
+
+        self.scan_period_sec = time_step_ms / 1000.0
+
+    def update(self, ranges_m, d_center_m=None, dtheta_rad=None):
+        max_range_m = self.max_range_m
+        scan_mm = []
+        for r in ranges_m:
+            if math.isinf(r) or r <= 0.0:
+                r = max_range_m
+            scan_mm.append(int(r * 1000))
+        
+        pose_change = None
+        if d_center_m is not None and dtheta_rad is not None:
+            d_center_mm = int(d_center_m * 1000)
+            dtheta_deg = math.degrees(dtheta_rad)
+            pose_change = (d_center_mm, dtheta_deg, self.scan_period_sec)
+
+        if pose_change is None:
+            self.slam.update(scan_mm)
+        else:
+            self.slam.update(scan_mm, pose_change)
+
+    def get_pose(self):
+        x_mm, y_mm, theta_deg = self.slam.getpos()
+        self.x_mm = x_mm
+        self.y_mm = y_mm
+        self.theta_deg = theta_deg
+
+        x_m = x_mm / 1000.0
+        y_m = y_mm / 1000.0
+        theta_rad = math.radians(theta_deg)
+        return x_m, y_m, theta_rad
+    
+    def get_map_grid(self):
+        self.slam.getmap(self.mapbytes)
+        size = self.MAP_SIZE_PIXELS
+        grid = np.frombuffer(self.mapbytes, dtype=np.uint8).reshape((size, size))
+        return grid
+
 # --------------- LIDAR Setup -----------------
 # Initialise LIDAR
 lidar = robot.getDevice('lidar')
 lidar.enable(TIME_STEP)
 
 lidar.enablePointCloud()
+
+# --------------- SLAM Backend -----------------
+slam_backend = SlamBackend(lidar, TIME_STEP)
 
 # --------------- IMU Setup -----------------
 # Initialise IMU
@@ -47,52 +188,50 @@ try:
 except:
     print("[WARN] IMU not found on this robot model.")
 
+# --------------- Pose Estimator Setup -----------------
+pose_estimator = PoseEstimator(WHEEL_RADIUS, AXLE_LENGTH)
 
-# --------------- Odometry Variables -----------------
-prev_left = 0.0
-prev_right = 0.0
-x = 0.0
-y = 0.0
-theta = 0.0
-first_step = True
 
-def update_odometry():
-    global prev_left, prev_right, x, y, theta, first_step
-
-    left_val = left_encoder.getValue()
-    right_val = right_encoder.getValue()
-    if first_step:
-        prev_left = left_val
-        prev_right = right_val
-        first_step = False
-        return
-    
-    d_left = left_val - prev_left
-    d_right = right_val - prev_right
-    prev_left = left_val
-    prev_right = right_val
-
-    dl_distance = d_left * WHEEL_RADIUS
-    dr_distance = d_right * WHEEL_RADIUS
-
-    d_center = (dl_distance + dr_distance) / 2.0
-    d_theta = (dr_distance - dl_distance) / AXLE_LENGTH
-
-    theta_mid = theta + d_theta / 2.0
-    x += d_center * math.cos(theta_mid)
-    y += d_center * math.sin(theta_mid)
-    theta += d_theta
-
+fused_theta = 0.0
+prev_fused_theta = 0.0
+alpha = 0.98  # Complementary filter coefficient
 # --------------- Main Loop -----------------
 while robot.step(TIME_STEP) != -1:
     t = robot.getTime()
-
-    update_odometry()
     
+    if t < 5.0:
+        v_left = 3.0
+        v_right = 3.0
+        phase = "Forward"
+    elif t < 10.0:
+        v_left = 2.0
+        v_right = -2.0
+        phase = "Turning"
+    else:
+        v_left = 0.0
+        v_right = 0.0
+        phase = "Stopped"
+
+    left_motor.setVelocity(v_left)
+    right_motor.setVelocity(v_right)
+
     left_val = left_encoder.getValue()
     right_val = right_encoder.getValue()
 
-    ranges = lidar.getRangeImage()
+    dx, dy, dtheta = pose_estimator.update_from_encoders(left_val, right_val)
+    odo_x, odo_y, odo_theta = pose_estimator.get_pose()
+
+    raw_ranges = lidar.getRangeImage()
+
+    n_beams = lidar.getHorizontalResolution()
+    n_layers = lidar.getNumberOfLayers()
+
+    if n_layers > 1:
+        middle_layer = n_layers // 2
+        ranges = raw_ranges[middle_layer * n_beams : (middle_layer + 1) * n_beams]
+    else:
+        ranges = raw_ranges[:n_beams]
+
     min_range = None
     center_range = None
     if ranges and len(ranges) > 0:
@@ -102,15 +241,75 @@ while robot.step(TIME_STEP) != -1:
     
     yaw_deg = None
     if imu is not None:
-        roll, pitch, yaw = imu.getRollPitchYaw()
+        roll, pitch, yaw = imu.getRollPitchYaw()  # yaw in radians
         yaw_deg = yaw * (180.0 / math.pi)
+    else:
+        yaw = None
+
+    if imu is not None and yaw is not None:
+
+        imu_yaw = (yaw + math.pi) % (2 * math.pi) - math.pi
+
+        fused_theta = alpha * odo_theta + (1 - alpha) * imu_yaw
+
+        dtheta_fused = fused_theta - prev_fused_theta
+        dtheta_fused = (dtheta_fused + math.pi) % (2 * math.pi) - math.pi
+
+        prev_fused_theta = fused_theta
+
+        dtheta_for_slam = dtheta_fused
+    else:
+        dtheta_for_slam = dtheta
+
+    if abs(dx) < 1e-6 and abs(dtheta) < 1e-6:
+        dtheta_for_slam = 0.0
+
+    if ranges and len(ranges) > 0:
+        slam_backend.update(ranges, d_center_m=dx, dtheta_rad=dtheta_for_slam)
+        slam_x, slam_y, slam_theta = slam_backend.get_pose()
+    else:
+        slam_x, slam_y, slam_theta = 0.0, 0.0, 0.0
         
-    if int(t * 2) % 2 == 0:
-        print(f"time={t:2f}s")
-        print(f"   pose: x={x:.2f} m, y={y:.2f} m, theta={theta*180/math.pi:.1f} deg")
-        print(f"   encoders: left={left_val:.2f}, right={right_val:.2f} rad")
+    if int(t) != int(t - TIME_STEP / 1000.0):
+        print(f"----  Time: {t:.2f} s  ----")
+        print(f"Phase: {phase}")
+        print(f"Odometry: x={odo_x:.2f} m, y={odo_y:.2f} m, theta={odo_theta*180/math.pi:.1f} deg")
+        print(f"SLAM Pose: x={slam_x:.2f} m, y={slam_y:.2f} m, theta={slam_theta*180/math.pi:.1f} deg")
+        print(f"SLAM raw theta_deg: {slam_backend.theta_deg:.1f}")
+        print(f"Encoders: left={left_val:.2f} rad, right={right_val:.2f} rad")
         if min_range is not None:
-            print(f"  Lidar: min={min_range:.2f} m, center={center_range:.2f} m")
+            print(f"Lidar: min={min_range:.2f} m, center={center_range:.2f} m")
         if yaw_deg is not None:
-            print(f"     IMU: yaw={yaw_deg:.2f} degrees")
+            print(f"IMU: yaw={yaw_deg:.2f} degrees")
+
+        if int(t) % 5 == 0:
+            grid = slam_backend.get_map_grid()
+            print(f"[MAP] mean={grid.mean():.1f}, occupied={(grid > 200).sum()}")
+
+        if SAVE_FINAL_MAP and (phase == "Stopped") and not map_saved:
+            grid = slam_backend.get_map_grid()
+
+            plt.figure(figsize=(6, 6))
+            plt.imshow(grid, cmap="gray", origin="lower")
+            plt.title("SLAM Occupancy Grid")
+            plt.axis("off")
+            plt.tight_layout()
+            plt.savefig("slam_map_final.png", dpi=300)
+            plt.close()
+
+            map_saved = True
+            print("[INFO] Saved final SLAM map to slam_map_final.png")
+
+        if SAVE_VIDEO_FRAMES:
+            grid = slam_backend.get_map_grid()
+            fname = os.path.join(FRAMES_DIR, f"map_{frame_index:04d}.png")
+            plt.figure(figsize=(6, 6))
+            plt.imshow(grid, cmap="gray", origin="lower")
+            plt.axis("off")
+            plt.tight_layout()
+            plt.savefig(fname, dpi=150)
+            plt.close()
+            frame_index += 1
+
+        print("-------------------------")
         
