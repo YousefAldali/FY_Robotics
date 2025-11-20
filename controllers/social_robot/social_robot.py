@@ -57,8 +57,8 @@ class PoseEstimator:
         self.wheel_radius = wheel_radius
         self.axle_length = axle_length
 
-        self.prev_left = 0.0
-        self.prev_right = 0.0
+        self.prev_left = None
+        self.prev_right = None
 
         self.x = 0.0
         self.y = 0.0
@@ -68,7 +68,7 @@ class PoseEstimator:
         if self.prev_left is None:
             self.prev_left = left_val
             self.prev_right = right_val
-            return
+            return 0.0, 0.0, 0.0
         
         d_left = left_val - self.prev_left
         d_right = right_val - self.prev_right
@@ -129,15 +129,26 @@ class SlamBackend:
         self.y_mm = 0
         self.theta_deg = 0
 
-    def update(self, ranges_m):
+        self.scan_period_sec = time_step_ms / 1000.0
+
+    def update(self, ranges_m, d_center_m=None, dtheta_rad=None):
         max_range_m = self.max_range_m
         scan_mm = []
         for r in ranges_m:
             if math.isinf(r) or r <= 0.0:
                 r = max_range_m
             scan_mm.append(int(r * 1000))
+        
+        pose_change = None
+        if d_center_m is not None and dtheta_rad is not None:
+            d_center_mm = int(d_center_m * 1000)
+            dtheta_deg = math.degrees(dtheta_rad)
+            pose_change = (d_center_mm, dtheta_deg, self.scan_period_sec)
 
-        self.slam.update(scan_mm)
+        if pose_change is None:
+            self.slam.update(scan_mm)
+        else:
+            self.slam.update(scan_mm, pose_change)
 
     def get_pose(self):
         x_mm, y_mm, theta_deg = self.slam.getpos()
@@ -180,6 +191,10 @@ except:
 # --------------- Pose Estimator Setup -----------------
 pose_estimator = PoseEstimator(WHEEL_RADIUS, AXLE_LENGTH)
 
+
+fused_theta = 0.0
+prev_fused_theta = 0.0
+alpha = 0.98  # Complementary filter coefficient
 # --------------- Main Loop -----------------
 while robot.step(TIME_STEP) != -1:
     t = robot.getTime()
@@ -226,11 +241,31 @@ while robot.step(TIME_STEP) != -1:
     
     yaw_deg = None
     if imu is not None:
-        roll, pitch, yaw = imu.getRollPitchYaw()
+        roll, pitch, yaw = imu.getRollPitchYaw()  # yaw in radians
         yaw_deg = yaw * (180.0 / math.pi)
+    else:
+        yaw = None
+
+    if imu is not None and yaw is not None:
+
+        imu_yaw = (yaw + math.pi) % (2 * math.pi) - math.pi
+
+        fused_theta = alpha * odo_theta + (1 - alpha) * imu_yaw
+
+        dtheta_fused = fused_theta - prev_fused_theta
+        dtheta_fused = (dtheta_fused + math.pi) % (2 * math.pi) - math.pi
+
+        prev_fused_theta = fused_theta
+
+        dtheta_for_slam = dtheta_fused
+    else:
+        dtheta_for_slam = dtheta
+
+    if abs(dx) < 1e-6 and abs(dtheta) < 1e-6:
+        dtheta_for_slam = 0.0
 
     if ranges and len(ranges) > 0:
-        slam_backend.update(ranges)
+        slam_backend.update(ranges, d_center_m=dx, dtheta_rad=dtheta_for_slam)
         slam_x, slam_y, slam_theta = slam_backend.get_pose()
     else:
         slam_x, slam_y, slam_theta = 0.0, 0.0, 0.0
