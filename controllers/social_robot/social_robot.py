@@ -1,5 +1,9 @@
 import math
 from controller import Robot
+import numpy as np
+from breezyslam.algorithms import RMHC
+from breezyslam.sensors import Laser
+
 
 robot = Robot()
 TIME_STEP = int(robot.getBasicTimeStep())
@@ -29,6 +33,49 @@ right_encoder = robot.getPositionSensor('right wheel sensor')
 left_encoder.enable(TIME_STEP)
 right_encoder.enable(TIME_STEP)
 
+# --------------- Pose Estimator Class -----------------
+class PoseEstimator:
+    def __init__(self, wheel_radius, axle_length):
+        self.wheel_radius = wheel_radius
+        self.axle_length = axle_length
+
+        self.prev_left = 0.0
+        self.prev_right = 0.0
+
+        self.x = 0.0
+        self.y = 0.0
+        self.theta = 0.0 # in radians
+
+    def update_from_encoders(self, left_val, right_val):
+        if self.prev_left is None:
+            self.prev_left = left_val
+            self.prev_right = right_val
+            return
+        
+        d_left = left_val - self.prev_left
+        d_right = right_val - self.prev_right
+
+        self.prev_left = left_val
+        self.prev_right = right_val
+
+        d_left_m = d_left * self.wheel_radius
+        d_right_m = d_right * self.wheel_radius
+
+        d_center = (d_left_m + d_right_m) / 2.0
+        d_theta = (d_right_m - d_left_m) / self.axle_length
+
+        theta_mid = self.theta + d_theta / 2.0
+        self.x += d_center * math.cos(theta_mid)
+        self.y += d_center * math.sin(theta_mid)
+        self.theta += d_theta
+
+        self.theta = (self.theta + math.pi) % (2 * math.pi) - math.pi
+
+        return d_center, 0.0, d_theta
+    
+    def get_pose(self):
+        return self.x, self.y, self.theta
+
 # --------------- LIDAR Setup -----------------
 # Initialise LIDAR
 lidar = robot.getDevice('lidar')
@@ -47,41 +94,11 @@ try:
 except:
     print("[WARN] IMU not found on this robot model.")
 
+# --------------- Pose Estimator Setup -----------------
 
-# --------------- Odometry Variables -----------------
-prev_left = 0.0
-prev_right = 0.0
-x = 0.0
-y = 0.0
-theta = 0.0
-first_step = True
+pose_estimator = PoseEstimator(WHEEL_RADIUS, AXLE_LENGTH)
 
-def update_odometry():
-    global prev_left, prev_right, x, y, theta, first_step
-
-    left_val = left_encoder.getValue()
-    right_val = right_encoder.getValue()
-    if first_step:
-        prev_left = left_val
-        prev_right = right_val
-        first_step = False
-        return
-    
-    d_left = left_val - prev_left
-    d_right = right_val - prev_right
-    prev_left = left_val
-    prev_right = right_val
-
-    dl_distance = d_left * WHEEL_RADIUS
-    dr_distance = d_right * WHEEL_RADIUS
-
-    d_center = (dl_distance + dr_distance) / 2.0
-    d_theta = (dr_distance - dl_distance) / AXLE_LENGTH
-
-    theta_mid = theta + d_theta / 2.0
-    x += d_center * math.cos(theta_mid)
-    y += d_center * math.sin(theta_mid)
-    theta += d_theta
+        
 
 # --------------- Main Loop -----------------
 while robot.step(TIME_STEP) != -1:
@@ -103,8 +120,7 @@ while robot.step(TIME_STEP) != -1:
     left_motor.setVelocity(v_left)
     right_motor.setVelocity(v_right)
 
-    update_odometry()
-    
+
     left_val = left_encoder.getValue()
     right_val = right_encoder.getValue()
 
