@@ -1,12 +1,30 @@
 import math
+import os
 from controller import Robot
 import numpy as np
 from breezyslam.algorithms import RMHC_SLAM
 from breezyslam.sensors import Laser
+import matplotlib
 
+import matplotlib.pyplot as plt
 
 robot = Robot()
 TIME_STEP = int(robot.getBasicTimeStep())
+
+matplotlib.use("Agg")
+
+# --------------- Configuration -----------------
+
+# Save final map and video frames
+SAVE_FINAL_MAP = True
+SAVE_VIDEO_FRAMES = False
+
+FRAMES_DIR = "slam_frames"
+if SAVE_VIDEO_FRAMES and not os.path.exists(FRAMES_DIR):
+    os.makedirs(FRAMES_DIR)
+
+map_saved = False
+frame_index = 0
 
 print("[INFO] Social Python Controller Initialized with TIME_STEP =", TIME_STEP)
 
@@ -220,11 +238,43 @@ while robot.step(TIME_STEP) != -1:
     if int(t) != int(t - TIME_STEP / 1000.0):
         print(f"----  Time: {t:.2f} s  ----")
         print(f"Phase: {phase}")
-        print(f"Odometry: x={x:.2f} m, y={y:.2f} m, theta={theta*180/math.pi:.1f} deg")
+        print(f"Odometry: x={odo_x:.2f} m, y={odo_y:.2f} m, theta={odo_theta*180/math.pi:.1f} deg")
+        print(f"SLAM Pose: x={slam_x:.2f} m, y={slam_y:.2f} m, theta={slam_theta*180/math.pi:.1f} deg")
+        print(f"SLAM raw theta_deg: {slam_backend.theta_deg:.1f}")
         print(f"Encoders: left={left_val:.2f} rad, right={right_val:.2f} rad")
         if min_range is not None:
             print(f"Lidar: min={min_range:.2f} m, center={center_range:.2f} m")
         if yaw_deg is not None:
             print(f"IMU: yaw={yaw_deg:.2f} degrees")
+
+        if int(t) % 5 == 0:
+            grid = slam_backend.get_map_grid()
+            print(f"[MAP] mean={grid.mean():.1f}, occupied={(grid > 200).sum()}")
+
+        if SAVE_FINAL_MAP and (phase == "Stopped") and not map_saved:
+            grid = slam_backend.get_map_grid()
+
+            plt.figure(figsize=(6, 6))
+            plt.imshow(grid, cmap="gray", origin="lower")
+            plt.title("SLAM Occupancy Grid")
+            plt.axis("off")
+            plt.tight_layout()
+            plt.savefig("slam_map_final.png", dpi=300)
+            plt.close()
+
+            map_saved = True
+            print("[INFO] Saved final SLAM map to slam_map_final.png")
+
+        if SAVE_VIDEO_FRAMES:
+            grid = slam_backend.get_map_grid()
+            fname = os.path.join(FRAMES_DIR, f"map_{frame_index:04d}.png")
+            plt.figure(figsize=(6, 6))
+            plt.imshow(grid, cmap="gray", origin="lower")
+            plt.axis("off")
+            plt.tight_layout()
+            plt.savefig(fname, dpi=150)
+            plt.close()
+            frame_index += 1
+
         print("-------------------------")
         
