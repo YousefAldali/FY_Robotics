@@ -1,3 +1,55 @@
 # macOS system files
 .DS_Store
 **/.DS_Store
+
+breezyslam/
+
+# BreezySLAM generated files
+breezyslam/build/
+breezyslam/python/breezyslam/*.pyc
+breezyslam/python/breezyslam/__pycache__/
+breezyslam/examples/__pycache__/
+breezyslam/examples/*.pyc
+breezyslam/examples/*.pgm
+breezyslam/examples/*.png
+breezyslam/examples/*.map
+breezyslam/examples/log2pgm
+
+# Ignore BreezySLAM directory (case-sensitive)
+BreezySLAM/
+
+# Compiled object files
+*.class
+*.o
+*.so
+
+# Swap files
+*.swp
+
+# Temporary build files
+python/build/   
+java/edu/wlu/cs/levy/breezyslam/algorithms/RMHCSLAM.h
+java/edu/wlu/cs/levy/breezyslam/components/Map.h
+java/edu/wlu/cs/levy/breezyslam/components/Scan.h
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+# Python virtual environments
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+.pytest_cache/
+.tox/
+
