@@ -1,7 +1,7 @@
 import math
 from controller import Robot
 import numpy as np
-from breezyslam.algorithms import RMHC
+from breezyslam.algorithms import RMHC_SLAM
 from breezyslam.sensors import Laser
 
 
@@ -75,6 +75,68 @@ class PoseEstimator:
     
     def get_pose(self):
         return self.x, self.y, self.theta
+    
+class WebotsLidar(Laser):
+    def __init__(self, lidar_device, time_step_ms):
+        n_beams = lidar_device.getHorizontalResolution()
+        fov_rad = lidar_device.getFov()
+        fov_deg = math.degrees(fov_rad)
+
+        max_range_m = lidar_device.getMaxRange()
+        max_range_mm = int(max_range_m * 1000)
+
+        scan_rate_hz = 1000.0 / float(time_step_ms)
+
+        super().__init__ (n_beams, scan_rate_hz, fov_deg, max_range_mm)
+
+        self.max_range_m = max_range_m
+
+
+
+class SlamBackend:
+    def __init__ (self, lidar_device, time_step_ms):
+        self.lidar_model = WebotsLidar(lidar_device, time_step_ms)
+        self.max_range_m = self.lidar_model.max_range_m
+        
+        self.MAP_SIZE_PIXELS = 800
+        self.MAP_SIZE_METERS = 20
+
+        self.slam = RMHC_SLAM(self.lidar_model,
+                         self.MAP_SIZE_PIXELS,
+                         self.MAP_SIZE_METERS)
+        
+        self.mapbytes = bytearray(self.MAP_SIZE_PIXELS * self.MAP_SIZE_PIXELS)
+
+        self.x_mm = 0
+        self.y_mm = 0
+        self.theta_deg = 0
+
+    def update(self, ranges_m):
+        max_range_m = self.max_range_m
+        scan_mm = []
+        for r in ranges_m:
+            if math.isinf(r) or r <= 0.0:
+                r = max_range_m
+            scan_mm.append(int(r * 1000))
+
+        self.slam.update(scan_mm)
+
+    def get_pose(self):
+        x_mm, y_mm, theta_deg = self.slam.getpos()
+        self.x_mm = x_mm
+        self.y_mm = y_mm
+        self.theta_deg = theta_deg
+
+        x_m = x_mm / 1000.0
+        y_m = y_mm / 1000.0
+        theta_rad = math.radians(theta_deg)
+        return x_m, y_m, theta_rad
+    
+    def get_map_grid(self):
+        self.slam.getmap(self.mapbytes)
+        size = self.MAP_SIZE_PIXELS
+        grid = np.frombuffer(self.mapbytes, dtype=np.uint8).reshape((size, size))
+        return grid
 
 # --------------- LIDAR Setup -----------------
 # Initialise LIDAR
@@ -82,6 +144,9 @@ lidar = robot.getDevice('lidar')
 lidar.enable(TIME_STEP)
 
 lidar.enablePointCloud()
+
+# --------------- SLAM Backend -----------------
+slam_backend = SlamBackend(lidar, TIME_STEP)
 
 # --------------- IMU Setup -----------------
 # Initialise IMU
@@ -95,10 +160,7 @@ except:
     print("[WARN] IMU not found on this robot model.")
 
 # --------------- Pose Estimator Setup -----------------
-
 pose_estimator = PoseEstimator(WHEEL_RADIUS, AXLE_LENGTH)
-
-        
 
 # --------------- Main Loop -----------------
 while robot.step(TIME_STEP) != -1:
@@ -120,11 +182,23 @@ while robot.step(TIME_STEP) != -1:
     left_motor.setVelocity(v_left)
     right_motor.setVelocity(v_right)
 
-
     left_val = left_encoder.getValue()
     right_val = right_encoder.getValue()
 
-    ranges = lidar.getRangeImage()
+    dx, dy, dtheta = pose_estimator.update_from_encoders(left_val, right_val)
+    odo_x, odo_y, odo_theta = pose_estimator.get_pose()
+
+    raw_ranges = lidar.getRangeImage()
+
+    n_beams = lidar.getHorizontalResolution()
+    n_layers = lidar.getNumberOfLayers()
+
+    if n_layers > 1:
+        middle_layer = n_layers // 2
+        ranges = raw_ranges[middle_layer * n_beams : (middle_layer + 1) * n_beams]
+    else:
+        ranges = raw_ranges[:n_beams]
+
     min_range = None
     center_range = None
     if ranges and len(ranges) > 0:
@@ -136,6 +210,12 @@ while robot.step(TIME_STEP) != -1:
     if imu is not None:
         roll, pitch, yaw = imu.getRollPitchYaw()
         yaw_deg = yaw * (180.0 / math.pi)
+
+    if ranges and len(ranges) > 0:
+        slam_backend.update(ranges)
+        slam_x, slam_y, slam_theta = slam_backend.get_pose()
+    else:
+        slam_x, slam_y, slam_theta = 0.0, 0.0, 0.0
         
     if int(t) != int(t - TIME_STEP / 1000.0):
         print(f"----  Time: {t:.2f} s  ----")
