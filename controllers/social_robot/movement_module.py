@@ -7,7 +7,7 @@ import cv2
 
 # Configuration constants
 OCC_THRESHOLD = 100  # Occupancy threshold for obstacle detection
-OBSTACLE_STOP_DIST = 0.5  # meters
+OBSTACLE_STOP_DIST = 0.3  # meters
 GOAL_TOLERANCE = 0.8  # meters
 FINAL_STUCK_LIMIT = 120  # steps
 STUCK_STEP_LIMIT = 300  # steps
