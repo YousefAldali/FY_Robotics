@@ -7,7 +7,7 @@ import cv2
 
 # Configuration constants
 OCC_THRESHOLD = 100  # Occupancy threshold for obstacle detection
-OBSTACLE_STOP_DIST = 0.5  # meters
+OBSTACLE_STOP_DIST = 0.3  # meters
 GOAL_TOLERANCE = 0.8  # meters
 FINAL_STUCK_LIMIT = 120  # steps
 STUCK_STEP_LIMIT = 300  # steps
@@ -106,13 +106,81 @@ class OccupancyAStarPlanner:
                 return path
 
             for nb in self.neighbors(*current):
-                tentative_g = g_cost[current] + 1.0
+                cell_value = self.grid[nb[1], nb[0]]
+                movement_cost = 1.0
+
+                if cell_value == 2:
+                    movement_cost = 8.0  # High cost discourages hugging walls
+
+                tentative_g = g_cost[current] + movement_cost
                 if nb not in g_cost or tentative_g < g_cost[nb]:
                     g_cost[nb] = tentative_g
                     f = tentative_g + self.heuristic(nb, goal)
                     heapq.heappush(open_set, (f, nb))
                     came_from[nb] = current
 
+        return []
+
+class SocialAStarPlanner(OccupancyAStarPlanner):
+    def __init__(self, occ_grid, human_pos, profile="Neutral"):
+        # Initialize the standard grid from the parent class
+        super().__init__(occ_grid)
+        self.human_pos = human_pos  # (grid_x, grid_y)
+
+        # Phase 4 Preview: Profiles allow you to change behavior easily
+        if profile == "Conservative":
+            self.sigma = 15.0  # Big bubble (pixels/cells)
+            self.amplitude = 20.0 # High cost
+        elif profile == "Open":
+            self.sigma = 8.0   # Small bubble
+            self.amplitude = 10.0
+        else: # Neutral
+            self.sigma = 10.0
+            self.amplitude = 15.0
+
+    def get_social_cost(self, i, j):
+        # Calculate distance from this node (i,j) to the human
+        hx, hy = self.human_pos
+        dist_sq = (i - hx)**2 + (j - hy)**2
+
+        # Gaussian function: Cost is highest at human position, drops off with distance
+        # Cost = A * e^(-dist^2 / (2*sigma^2))
+        cost = self.amplitude * math.exp(-dist_sq / (2 * self.sigma**2))
+        return cost
+
+    def plan(self, start, goal):
+        # This is mostly identical to your standard A*, but adds 'social_cost'
+        start = tuple(start)
+        goal = tuple(goal)
+
+        open_set = []
+        heapq.heappush(open_set, (0.0, start))
+
+        came_from = {}
+        g_cost = {start: 0.0}
+
+        while open_set:
+            _, current = heapq.heappop(open_set)
+
+            if current == goal:
+                path = [current]
+                while current in came_from:
+                    current = came_from[current]
+                    path.append(current)
+                path.reverse()
+                return path
+
+            for nb in self.neighbors(*current):
+                # --- THE CHANGE IS HERE ---
+                # Standard cost is 1.0. We add the social cost to it.
+                step_cost = 1.0 + self.get_social_cost(nb[0], nb[1])
+
+                tentative_g = g_cost[current] + step_cost
+                if nb not in g_cost or tentative_g < g_cost[nb]:
+                    g_cost[nb] = tentative_g
+                    f = tentative_g + self.heuristic(nb, goal)
+                    heapq.heappush(open_set, (f, nb))
+                    came_from[nb] = current
         return []
 
 class AStarPlanner:
@@ -161,7 +229,13 @@ class AStarPlanner:
                 return path
 
             for nb in self.neighbors(*current):
-                tentative_g = g_cost[current] + 1.0
+                cell_value = self.grid[nb[1], nb[0]]
+                movement_cost = 1.0
+
+                if cell_value == 2:
+                    movement_cost = 8.0  # High cost discourages hugging walls
+
+                tentative_g = g_cost[current] + movement_cost
                 if nb not in g_cost or tentative_g < g_cost[nb]:
                     g_cost[nb] = tentative_g
                     f = tentative_g + self.heuristic(nb, goal)
@@ -174,14 +248,14 @@ class AStarPlanner:
 
 
 # Room coordinates (SLAM world coordinates in meters)
+# Updated with real SLAM coordinates
 ROOM_GOALS = {
-    "hall":      (11.4, 10.0),
-    "kitchen":   (10.4,  8.6),
-    "living":    (10.4,  9.0),
-    "bed1":      (10.1, 11.6),
-    "bathroom":  (11.6, 10.7),
-    "bed2":      (8.5,  11.4),
-    "test_hall": (11.11, 9.99),
+    "start_point": (10.01, 10.00),  # Start point in hallway
+    "bed1":        (14.52, 4.94),
+    "bed2":        (9.12,  4.58),
+    "living":      (4.80,  6.75),
+    "bathroom":    (15.13, 15.25),
+    "kitchen":     (4.35,  15.09)
 }
 
 
@@ -310,68 +384,152 @@ def mark_frontier_region_visited(visited_set, center, radius=3):
         for dj in range(-radius, radius + 1):
             visited_set.add((ci + di, cj + dj))
 
-
+#
+# def find_nearest_frontier(grid, start_i, start_j, visited, prefer_distant=False):
+#
+#     if grid is None:
+#         return None
+#
+#     h, w = grid.shape
+#
+#     # 0) Clamp robot index to valid range
+#     start_i = int(np.clip(start_i, 0, w - 1))
+#     start_j = int(np.clip(start_j, 0, h - 1))
+#
+#     # Ensure uint8 for OpenCV
+#     g = grid.astype(np.uint8)
+#
+#     # 1) Free and non-free masks
+#     free_mask = (g == 1)         # True where cell is free
+#     nonfree_mask = (g == 0)      # True where cell is obstacle or unknown
+#
+#     free_u8    = free_mask.astype(np.uint8)    # 0/1
+#     nonfree_u8 = nonfree_mask.astype(np.uint8) # 0/1
+#
+#     # 2) Dilate non-free, then frontiers are free cells adjacent to non-free
+#     kernel = np.ones((3, 3), np.uint8)
+#     dilated_nonfree = cv2.dilate(nonfree_u8, kernel, iterations=1)
+#
+#     frontier_mask = free_mask & (dilated_nonfree > 0)
+#
+#     #  3) Remove visited frontiers directly from the mask
+#     for (vi, vj) in visited:
+#         if 0 <= vj < h and 0 <= vi < w:
+#             frontier_mask[vj, vi] = False
+#
+#     # 4) Extract frontier pixels
+#     frontier_pixels = np.argwhere(frontier_mask)
+#     if frontier_pixels.size == 0:
+#         return None
+#
+#     max_frontiers = 5000
+#     if len(frontier_pixels) > max_frontiers:
+#         idxs = np.linspace(0, len(frontier_pixels) - 1, max_frontiers).astype(int)
+#         frontier_pixels = frontier_pixels[idxs]
+#
+#         # Compute distances
+#     dy = frontier_pixels[:, 0] - start_j
+#     dx = frontier_pixels[:, 1] - start_i
+#     d2 = dx * dx + dy * dy
+#
+#     if prefer_distant:
+#         distances = np.sqrt(d2)
+#
+#         # Weight: prefer distance 50-200 cells, penalize very close or very far
+#         weights = np.ones_like(distances)
+#         weights[distances < 20] = 0.1  # Penalize very close
+#         weights[distances > 200] = 0.5  # Penalize very far
+#
+#         # Combine distance with weight
+#         scores = distances * weights
+#         best_idx = int(np.argmax(scores))  # Maximize weighted distance
+#     else:
+#         # Original behavior
+#         best_idx = int(np.argmin(d2))
+#
+#     fj, fi = frontier_pixels[best_idx]
+#     return (int(fi), int(fj))
 def find_nearest_frontier(grid, start_i, start_j, visited, prefer_distant=False):
-   
     if grid is None:
         return None
 
     h, w = grid.shape
 
-    # 0) Clamp robot index to valid range 
+    # 0) Clamp robot index to valid range
     start_i = int(np.clip(start_i, 0, w - 1))
     start_j = int(np.clip(start_j, 0, h - 1))
 
     # Ensure uint8 for OpenCV
     g = grid.astype(np.uint8)
 
-    # 1) Free and non-free masks 
-    free_mask = (g == 1)         # True where cell is free
-    nonfree_mask = (g == 0)      # True where cell is obstacle or unknown
+    # 1) Free and non-free masks
+    free_mask = (g == 1)  # True where cell is free
+    nonfree_mask = (g == 0)  # True where cell is obstacle or unknown
 
-    free_u8    = free_mask.astype(np.uint8)    # 0/1
-    nonfree_u8 = nonfree_mask.astype(np.uint8) # 0/1
+    free_u8 = free_mask.astype(np.uint8)  # 0/1
+    nonfree_u8 = nonfree_mask.astype(np.uint8)  # 0/1
 
-    # 2) Dilate non-free, then frontiers are free cells adjacent to non-free 
+    # 2) Dilate non-free
     kernel = np.ones((3, 3), np.uint8)
     dilated_nonfree = cv2.dilate(nonfree_u8, kernel, iterations=1)
 
     frontier_mask = free_mask & (dilated_nonfree > 0)
 
-    #  3) Remove visited frontiers directly from the mask 
+    # 3) Remove visited frontiers
     for (vi, vj) in visited:
         if 0 <= vj < h and 0 <= vi < w:
             frontier_mask[vj, vi] = False
 
-    # 4) Extract frontier pixels 
-    frontier_pixels = np.argwhere(frontier_mask)  
-    if frontier_pixels.size == 0:
-        return None
+    # 4) Group frontiers into connected components (Clusters)
+    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(frontier_mask.astype(np.uint8),
+                                                                            connectivity=8)
 
-    max_frontiers = 5000
-    if len(frontier_pixels) > max_frontiers:
-        idxs = np.linspace(0, len(frontier_pixels) - 1, max_frontiers).astype(int)
-        frontier_pixels = frontier_pixels[idxs]
+    best_target = None
+    max_score = -1.0
 
-        # Compute distances
-    dy = frontier_pixels[:, 0] - start_j
-    dx = frontier_pixels[:, 1] - start_i
-    d2 = dx * dx + dy * dy
+    # Thresholds
+    MIN_DIST_PIXELS = 80  # ~2 meter. Don't target anything closer than this.
+    MIN_AREA = 15  # Ignore tiny jagged corners
 
-    if prefer_distant:
-        distances = np.sqrt(d2)
+    # Iterate over clusters (skip label 0, which is background)
+    for i in range(1, num_labels):
+        area = stats[i, cv2.CC_STAT_AREA]
+        center_x, center_y = centroids[i]
 
-        # Weight: prefer distance 50-200 cells, penalize very close or very far
-        weights = np.ones_like(distances)
-        weights[distances < 20] = 0.1  # Penalize very close
-        weights[distances > 200] = 0.5  # Penalize very far
+        # A. IGNORE NOISE: Filter out small corners
+        if area < MIN_AREA:
+            continue
 
-        # Combine distance with weight
-        scores = distances * weights
-        best_idx = int(np.argmax(scores))  # Maximize weighted distance
-    else:
-        # Original behavior
-        best_idx = int(np.argmin(d2))
+        # B. CALCULATE DISTANCE
+        dx = center_x - start_i
+        dy = center_y - start_j
+        dist = math.hypot(dx, dy)
 
-    fj, fi = frontier_pixels[best_idx]
-    return (int(fi), int(fj))
+        # C. SCORING FUNCTION
+        # Goal: Aggressively prefer FURTHER targets.
+
+        if dist < MIN_DIST_PIXELS:
+            # Penalize nearby targets heavily to prevent "Ping-Pong"
+            # We effectively divide the score by 10
+            score = area * 0.1
+        else:
+            # Reward distant targets exponentially
+            # Score = Area * (Distance ^ 2)
+            # A target 2x further is 4x more valuable.
+            score = area * (dist ** 2)
+
+        if score > max_score:
+            max_score = score
+            best_target = (int(center_x), int(center_y))
+
+    # Fallback: If no good clusters found (map mostly explored)
+    if best_target is None:
+        frontier_pixels = np.argwhere(frontier_mask)
+        if frontier_pixels.size == 0:
+            return None
+        # Pick random valid pixel
+        idx = len(frontier_pixels) // 2
+        fj, fi = frontier_pixels[idx]
+        return (int(fi), int(fj))
+
+    return best_target

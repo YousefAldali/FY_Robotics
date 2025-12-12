@@ -57,4 +57,5 @@ build/
 
 slam_frames
 map_*.png
+map_snapshots
 

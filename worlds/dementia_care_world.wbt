@@ -8,12 +8,10 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/cabinet/protos/Cabinet.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/fridge/protos/Fridge.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/components/protos/Worktop.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/oven/protos/Oven.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/components/protos/Sink.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/components/protos/HotPlate.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/adept/pioneer3/protos/Pioneer3dx.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/tables/protos/Table.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/tables/protos/RoundTable.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/living_room_furniture/protos/Sofa.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/television/protos/Television.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/chairs/protos/Chair.proto"
@@ -28,12 +26,14 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/bathroom/protos/WashingMachine.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/utensils/protos/Fork.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/appearances/protos/Parquetry.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/fruits/protos/FruitBowl.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/humans/pedestrian/protos/Pedestrian.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.5052139421961034 0.5052144920037298 0.6996550504928021 1.9206083938659815
-  position 4.911699351351729 -21.680462620112607 68.70997671078798
+  orientation 0.37436204939636486 -0.07250499305059609 -0.9244436607790042 3.4959160976051855
+  position 22.8328897050799 -2.6307960826147734 29.113819163806387
 }
 TexturedBackground {
 }
@@ -46,6 +46,26 @@ RectangleArena {
     type "dark strip"
   }
 }
+Pedestrian {
+  translation 4.51 -6.44 1.27
+}
+WashingMachine {
+  translation -2.49 2.48 0.53
+  rotation 0 0 1 1.5708
+  name "whashing machine(1)"
+}
+Table {
+  translation -7.06 -3.22005 0.01
+  rotation 0.0040869685626383784 9.589706627359362e-09 -0.9999916483091087 -5.307179586466759e-06
+  name "table(3)"
+  size 1 1 0.4
+}
+Table {
+  translation -7.06 -6.21005 0
+  rotation 0 0 1 4.692820414042842e-06
+  name "table(4)"
+  size 1 1 0.4
+}
 Wall {
   translation -2 -4.45 0
   name "corridorLeft(2)"
@@ -57,48 +77,41 @@ Wall {
   size 0.2 4 2.4
 }
 Wall {
-  translation 2 6.01 0
+  translation 2 7.13 0
   name "corridorRight(2)"
   size 0.2 1.75 2.4
 }
 Fork {
-  translation 7.2899907089137725 4.600000000056608 1.0311398488562071
-  rotation 7.141806066585383e-10 -0.9999999999999787 2.0708241914141997e-07 0.006892918283737677
+  translation 7.289848595961759 4.600000026596635 0.5311398531014444
+  rotation -3.256912336171785e-07 -0.9999999955359453 -9.448811200050019e-05 0.006892947175546527
 }
 WashingMachine {
-  translation -7.49 7.4 0.53
+  translation -3.28 2.45 0.53
+  rotation 0 0 1 1.5708
+}
+WashingMachine {
+  translation -7.49 7.6 0.53
   rotation 0 0 1 -1.5707953071795862
+  name "whashing machine(2)"
 }
 Worktop {
-  translation -7.19 7.61 0.81
-  name "worktop(16)"
-}
-Worktop {
-  translation -6.49 7.62 0.8
+  translation -6.63 7.62 0.66
   name "worktop(15)"
+  size 1 0.44 0.06
 }
 Worktop {
-  translation -5.08 7.63 0.83
-  name "worktop(14)"
-}
-Worktop {
-  translation -4.38 7.63 0.85
-  name "worktop(13)"
-}
-Worktop {
-  translation -3.7 7.65 0.84
-  name "worktop(12)"
+  translation -4.42 7.62 0.66
+  name "worktop(2)"
+  size 2 0.44 0.06
 }
 Mirror {
-  translation -6.18 7.66 1.58004
+  translation -7.11 7.66 1.83004
   rotation 0.5773499358549823 0.5773519358547601 -0.5773489358550934 2.0944
-}
-RoundTable {
-  translation -6.85 -2.72 0
-  name "round table(1)"
+  width 1.3
+  height 3.7
 }
 Armchair {
-  translation 3.30312 -6.81312 0
+  translation 3.03444 -5.89398 0
   rotation 0 0 1 0.785398
   name "armchair(1)"
 }
@@ -126,83 +139,102 @@ Window {
   rotation 0 0 1 -1.5707953071795862
 }
 BunchOfSunFlowers {
-  translation 6.58 1.38 0.91
+  translation 6.39 1.38 0.21
 }
 Table {
-  translation 4.21 -4.76 0
+  translation 4.38 -3.49 0
   rotation 0 0 1 4.692820414042842e-06
   name "table(2)"
+  size 1 1.8 0.3
 }
 Armchair {
-  translation 3.17592 -2.75503 0
+  translation 2.97796 -1.01567 0
   rotation 0 0 1 -0.785395307179586
 }
 Bathtube {
-  translation -6.86001 2.52 0
+  translation -6.68001 2.69 0
   rotation 0 0 1 1.5708
 }
 BathroomSink {
-  translation -5.79 7.84 0.77
+  translation -5.79 7.84 0.67
   rotation 0 0 1 -1.5707953071795862
   name "sink(1)"
 }
 Toilet {
-  translation -7.29 4.59 0
+  translation -7.22 4.59 0
+  lidColor 0.45 0.7 0.81
 }
 Plate {
-  translation 6.76 0.97 0.00988228
-  rotation 0.6581722439207265 0.7527349191582781 -0.014122280698832134 3.6409333929562867e-16
+  translation 6.62152 0.966896 0.339986
+  rotation 0.4632346985161216 0.19203953061997703 0.8651788443841752 0.0006874849263858834
   name "plate(2)"
 }
 Plate {
-  translation 6.29 1.87 0.7399411400000002
-  rotation 0.9977793493214697 -0.06658814110879298 0.0015458108874838177 3.743635290161501e-15
-  name "plate(1)"
+  translation 6.11998 0.890645 0.339974
+  rotation -0.9163902351482568 -0.028585364340286894 0.3992640903843665 0.0004463387153394172
 }
 Plate {
-  translation 6.21 0.89 0.00988228
-  rotation 0.5360976107953931 0.8252668605022007 -0.1775780410307331 9.72708570173104e-17
+  translation 6.15 1.87 0.339941
+  rotation 0.9424097180081308 0.3341215260980685 -0.015057529735429518 5.0828644346635056e-14
+  name "plate(3)"
+}
+Plate {
+  translation 6.6 1.87 0.339941
+  rotation -0.50927404661127 0.8604562306779544 -0.015969362406467867 1.5156240608512115e-14
+  name "plate(4)"
 }
 Chair {
-  translation 7.31 1.92998 0
+  translation 7.31 1.92998 -0.25
   rotation 0 0 1 3.14159
   name "chair(3)"
 }
 Chair {
-  translation 5.71 1.88 0
+  translation 5.24 1.88 -0.25
   name "chair(2)"
 }
 Chair {
-  translation 7.3 0.99998 0
+  translation 7.3 0.99998 -0.25
   rotation 0 0 1 3.14159
   name "chair(1)"
 }
 Chair {
-  translation 5.65 0.98 0
+  translation 5.25 0.98 -0.25
 }
 Table {
-  translation 6.52 1.43 0
+  translation 6.32 1.43 0.04
   name "table(1)"
+  size 1 1.8 0.3
 }
 Television {
-  translation 7.33 -6.86 1.1
+  translation 7.85 -6.55 1.1
+  rotation 0 0 1 3.14159
+  displayWidth 49
+  displayHeight 59
 }
 Sofa {
-  translation 2.66 -4.81 0
-}
-RoundTable {
-  translation -6.67 -6.66 0
+  translation 2.81 -3.54 0
 }
 Table {
-  translation 7.36 -6.89 0
+  translation 7.3 -6.56 0
+  size 1 1.8 0.3
 }
 Cabinet {
-  translation -6.8 1.7 0
+  hidden position_6_0 6.406136652236473e-06
+  hidden translation_7 -1.2748211937863405e-06 -4.0830394620883226e-12 0
+  hidden rotation_7 0 0 0.9999999999999999 6.406113008859535e-06
+  hidden position_10_0 -5.446180061596806e-06
+  hidden translation_11 -9.212213574145464e-07 2.508410146262463e-12 0
+  hidden rotation_11 0 0 -1 5.446165469934237e-06
+  hidden position_14_0 -6.27066310946964e-36
+  hidden position_22_0 -6.27066311067763e-36
+  hidden position_30_0 -6.270663109518695e-36
+  hidden position_38_0 -1.3049761167878113e-35
+  translation -6.8 1.58 0
   rotation 0 0 1 -1.5707953071795862
   name "cabinet(1)"
 }
 Bed {
-  translation -6.65 -4.7 0
+  translation -6.5 -4.7 -0.19
   name "bed(1)"
 }
 Wall {
@@ -218,12 +250,21 @@ Wall {
   size 0.2 0.7 2.4
 }
 Pioneer3dx {
-  hidden linearVelocity_0 1.486271565718095e-09 -6.066854614378075e-08 3.154892520252533e-11
-  hidden angularVelocity_0 -2.40609429220151e-07 8.484143591138986e-09 -5.274332863936649e-07
-  translation -0.10295818904849546 -0.00012787731180490956 0.10481477871984396
-  rotation 0.01731096281762984 6.426385478756113e-06 0.9998501540356075 -3.1408175416446062
+  hidden position_0_0 -3.7771088390314844e-07
+  hidden position_0_1 -0.08221135336306151
+  hidden position_0_2 -0.08221221634877983
+  hidden linearVelocity_0 2.624818831492334e-15 5.058644240670725e-15 -1.0811229738756949e-15
+  hidden angularVelocity_0 -1.6292373057632793e-16 1.570780560481478e-14 2.9010933187089487e-14
+  hidden rotation_1 0.5773501238086344 -0.5773503418801011 -0.5773503418801144 2.094395218071494
+  hidden position_1_0 0.28960272274470694
+  hidden rotation_2 1 0 0 0.28960272274470694
+  hidden rotation_4 0.5925333242451066 -0.5925333270126549 -0.5457183486363247 2.1424925250663525
+  hidden rotation_9 0.5925334770448312 -0.5925334798124087 -0.5457180168205561 2.1424930364142174
+  translation -0.09209792991255261 -0.0001189389905453265 0.10481477876304404
+  rotation 0.017310962215764964 6.69183695160403e-06 0.9998501540442866 -3.1408181877626267
   name "social_robot"
   controller "social_robot"
+  supervisor TRUE
   extensionSlot [
     InertialUnit {
       name "imu"
@@ -236,86 +277,46 @@ Pioneer3dx {
   ]
 }
 Worktop {
-  translation 7.53 4.06 0.53
+  translation 7.53 5.54 0.28
   name "worktop(11)"
-  size 0.7 0.62 1
+  size 0.7 5 0.5
 }
-Oven {
-  translation 7.41 3.53 0
-  rotation 0 0 1 3.14159
+Worktop {
+  translation 6.02 7.58 0.28
+  rotation 0 0 1 -1.5707953071795862
+  name "worktop(1)"
+  size 0.7 4 0.5
 }
 Sink {
-  translation 5.07 7.63 1.1
+  translation 5.07 7.63 0.58
   rotation 2.653589999981315e-06 -2.653589999981315e-06 0.9999999999929585 -1.5707953071795862
 }
 HotPlate {
-  translation 7.62 5.73 1.04
+  translation 7.62 5.73 0.54
   rotation 0 0 1 3.14159
 }
-Worktop {
-  translation 7.55 7.58 0.53
-  name "worktop(4)"
-  size 0.7 0.62 1
-}
-Worktop {
-  translation 7.54 6.97 0.53
-  name "worktop(5)"
-  size 0.7 0.62 1
-}
 Bed {
-  translation 0.890004 -3.78 0
+  translation 1.07 -3.53 -0.19
   rotation 0 0 1 -1.5707953071795862
 }
 Fridge {
+  hidden position_0_0 -4.3948801033051406e-05
+  hidden position_0_1 4.394880115467134e-05
+  hidden rotation_1 0 0 -1 4.394879680268657e-05
+  hidden rotation_2 0 0 1 4.394879680268657e-05
   translation 3.65 7.53 0
   rotation 0 0 1 -1.5707953071795862
 }
-Worktop {
-  translation 4.73 7.57 0.53
-  size 0.7 0.62 1
-}
-Worktop {
-  translation 4.11 7.57 0.53
-  name "worktop(6)"
-  size 0.7 0.62 1
-}
-Worktop {
-  translation 7.54 6.36 0.53
-  name "worktop(7)"
-  size 0.7 0.62 1
-}
-Worktop {
-  translation 7.53 5.75 0.53
-  name "worktop(8)"
-  size 0.7 0.62 1
-}
-Worktop {
-  translation 7.53 5.2 0.53
-  name "worktop(9)"
-  size 0.7 0.62 1
-}
-Worktop {
-  translation 7.53 4.65 0.53
-  name "worktop(10)"
-  size 0.7 0.62 1
-}
-Worktop {
-  translation 5.47 7.57 0.53
-  name "worktop(1)"
-  size 0.8 0.62 1
-}
-Worktop {
-  translation 6.19 7.58 0.53
-  name "worktop(2)"
-  size 0.7 0.62 1
-}
-Worktop {
-  translation 6.87 7.58 0.53
-  name "worktop(3)"
-  size 0.7 0.62 1
-}
 Cabinet {
-  translation -1.87 -6.92 0
+  hidden position_6_0 6.403634197594925e-06
+  hidden translation_7 -1.2743232053126829e-06 -4.079847570892525e-12 0
+  hidden rotation_7 0 0 1 6.403616904466577e-06
+  hidden position_10_0 -5.4432362971975015e-06
+  hidden translation_11 -9.207234196664108e-07 2.505856633305825e-12 0
+  hidden rotation_11 0 0 -1 5.443229179705257e-06
+  translation -2.07 -7.12 0
+  innerThickness 0.01
+  outerThickness 0.3
 }
 Wall {
   translation -4.96 1.86998 0
@@ -334,6 +335,10 @@ Wall {
   rotation 0 0 1 1.5707996938995747
   name "BottomWall"
   size 0.2 16.2 2.4
+}
+FruitBowl {
+  translation 4.420000000518109 -3.5500000005181125 0.29980383027118385
+  rotation -0.018672156503304598 0.004676736351964832 0.9998147221903718 6.470903140458534e-16
 }
 Wall {
   translation 0 8 0
@@ -362,27 +367,27 @@ Wall {
   size 0.2 16 2.4
 }
 Wall {
-  translation -2 6.1 0
+  translation -2 7.04 0
   name "corridorLeft"
   size 0.2 1.9 2.4
 }
 Wall {
-  translation 2.61 6.96 0
+  translation 2.61 7.79 0
   rotation 0 0 1 1.5708
   name "kitchenWall_1(1)"
   size 0.2 1.4 2.4
 }
 Wall {
-  translation -2.65 6.96 0
+  translation -2.65 7.79 0
   rotation 0 0 1 1.5708
   name "kitchenWall_1(2)"
   size 0.2 1.4 2.4
 }
 Wall {
-  translation 3.2 7.55 0
+  translation 3.2 8.31 0
   name "kitchenWall_1"
 }
 Wall {
-  translation -3.25 7.55 0
+  translation -3.25 8.25 0
   name "kitchenWall_1(3)"
 }
