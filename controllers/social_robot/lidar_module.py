@@ -100,8 +100,8 @@ def get_lidar_safety_info(ranges, obstacle_stop_dist=0.25):
         center_index = len(ranges) // 2
         center_range = ranges[center_index]
 
-        # front window: ±10 beams around center
-        half_window = int(len(ranges) * 0.15)
+        # front window: ±20 beams around center
+        half_window = int(len(ranges) * 0.20)
         start_idx = max(0, center_index - half_window)
         end_idx = min(len(ranges), center_index + half_window + 1)
         front_window = ranges[start_idx:end_idx]
