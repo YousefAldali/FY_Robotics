@@ -1,3 +1,5 @@
+# Copyright 1996-2024 Cyberbotics Ltd.
+# Modified to be PASSIVE (Animation Only)
 from controller import Supervisor
 import math
 
@@ -80,7 +82,8 @@ class Pedestrian (Supervisor):
                 self.current_height_offset = self.height_offsets[current_sequence] * (1 - ratio) + \
                     self.height_offsets[(current_sequence + 1) % self.WALK_SEQUENCES_NUMBER] * ratio
                     
-
+                # NOTE: We do NOT set 'root_translation' here. We let the Robot do it.
+                # We update rotation to face direction of movement?
                 if move_dist > 0.005:
                     angle = math.atan2(dy, dx)
                     rotation = [0, 0, 1, angle]
