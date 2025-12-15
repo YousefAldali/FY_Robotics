@@ -3,8 +3,6 @@ import os
 import cv2
 import csv
 from controller import Keyboard, Supervisor
-import csv
-from controller import Keyboard, Supervisor
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,18 +10,14 @@ import numpy as np
 from lidar_module import SlamBackend, process_lidar_ranges, get_lidar_safety_info
 from movement_module import (
     PoseEstimator, SocialAStarPlanner, AStarPlanner, ROOM_GOALS, OccupancyAStarPlanner,
-    PoseEstimator, SocialAStarPlanner, AStarPlanner, ROOM_GOALS, OccupancyAStarPlanner,
     slam_pose_to_grid, grid_to_world, find_nearest_free_cell,
     compute_wheel_velocities, apply_complementary_filter,
     OBSTACLE_STOP_DIST, STUCK_STEP_LIMIT, 
     find_nearest_frontier, mark_frontier_region_visited,
     is_occupied
-    find_nearest_frontier, mark_frontier_region_visited,
-    is_occupied
 )
 
 # Initialize robot
-robot = Supervisor()
 robot = Supervisor()
 TIME_STEP = int(robot.getBasicTimeStep())
 
@@ -41,11 +35,8 @@ VIDEO_FPS = 10
 MAX_EXPLORATION_TIME = 1000 # 2500
 FRAMES_DIR = "slam_frames"
 SNAPSHOTS_DIR = "map_snapshots"
-SNAPSHOTS_DIR = "map_snapshots"
 if SAVE_VIDEO_FRAMES and not os.path.exists(FRAMES_DIR):
     os.makedirs(FRAMES_DIR)
-if not os.path.exists(SNAPSHOTS_DIR):
-    os.makedirs(SNAPSHOTS_DIR)
 if not os.path.exists(SNAPSHOTS_DIR):
     os.makedirs(SNAPSHOTS_DIR)
 
@@ -103,9 +94,6 @@ pose_estimator = PoseEstimator(WHEEL_RADIUS, AXLE_LENGTH)
 # Force the robot to know its real starting location on the map
 pose_estimator.x = 10.01
 pose_estimator.y = 10.00
-# Force the robot to know its real starting location on the map
-pose_estimator.x = 10.01
-pose_estimator.y = 10.00
 
 # --------------- Navigation State -----------------
 mode = "IDLE"  # Modes: IDLE, EXPLORE, MANUAL, TEST, GUIDE
@@ -115,15 +103,12 @@ current_wp_idx = 0
 last_wp_idx = None
 stuck_steps = 0
 spin_timer = 0
-spin_timer = 0
 avoid_timer = 0
-AVOID_MIN_CLEARANCE = 0.45
 AVOID_MIN_CLEARANCE = 0.45
 frontier_cache = None
 frontier_cache_time = 0.0
 FRONTIER_CACHE_DURATION = 0.5
 last_explore_time = 0.0
-EXPLORE_INTERVAL = 0.2
 EXPLORE_INTERVAL = 0.2
 turn_accumulated = 0.0
 last_stuck_check_time = 0.0
@@ -154,7 +139,6 @@ def reset_navigation_state():
     global last_stuck_check_time, last_stuck_pos
     last_stuck_check_time = 0.0
     last_stuck_pos = (0.0, 0.0)
-
 
 # --------------- Fetch human node ---------------------------
 def find_node_by_name(robot, target_name):
@@ -245,7 +229,6 @@ fused_theta = 0.0
 prev_fused_theta = 0.0
 alpha = 0.98  
 
-
 imu_offset = 0.0
 if imu:
     for i in range(10): 
@@ -324,7 +307,6 @@ while robot.step(TIME_STEP) != -1:
         inflation_kernel = np.ones((10, 10), np.uint8)
         hard_obs = (occ == 1).astype(np.uint8)
         inflated = cv2.dilate(hard_obs, inflation_kernel, iterations=1)
-        inflated = cv2.dilate(hard_obs, inflation_kernel, iterations=1)
         occ[inflated == 1] = 1
 
         # Apply Persistent Obstacles (Blacklist)
@@ -347,7 +329,6 @@ while robot.step(TIME_STEP) != -1:
         else:
             print("[RETURN] Path planning failed (Start/Goal blocked?). Stopping.")
             state = "DONE"
-
 
     # 1) Read encoders & update odometry 
     left_val = left_encoder.getValue()
@@ -392,7 +373,6 @@ while robot.step(TIME_STEP) != -1:
     else:
         dtheta_for_slam = dtheta
 
-    # 4) SLAM update
     # 4) SLAM update
     if ranges and len(ranges) > 0:
         slam_backend.update(ranges, d_center_m=dx, dtheta_rad=dtheta_for_slam)
@@ -464,9 +444,6 @@ while robot.step(TIME_STEP) != -1:
 
     # 5) High-level state machine
     # Only run state machine if in EXPLORE mode
-
-    # 5) High-level state machine
-    # Only run state machine if in EXPLORE mode
     if mode == "EXPLORE":
         if state == "EXPLORE":
             phase = "Calculating Frontier"
@@ -476,22 +453,12 @@ while robot.step(TIME_STEP) != -1:
                 left_motor.setVelocity(v_left)
                 right_motor.setVelocity(v_right)
                 continue
-            if (t - last_explore_time) < EXPLORE_INTERVAL:
-                v_left = v_right = 0.0
-                left_motor.setVelocity(v_left)
-                right_motor.setVelocity(v_right)
-                continue
 
-            last_explore_time = t
-            v_left, v_right = 0.0, 0.0
             last_explore_time = t
             v_left, v_right = 0.0, 0.0
 
             grid = slam_backend.get_map_grid()
-            grid = slam_backend.get_map_grid()
 
-            OBSTACLE_MAX = 100
-            FREE_MIN = 230
             OBSTACLE_MAX = 100
             FREE_MIN = 230
 
@@ -528,12 +495,7 @@ while robot.step(TIME_STEP) != -1:
             nav_grid = (occ == 1).astype(np.uint8)
 
             start_i, start_j = slam_pose_to_grid(slam_x, slam_y, slam_backend)
-            start_i, start_j = slam_pose_to_grid(slam_x, slam_y, slam_backend)
 
-            # Clamp indices
-            h, w = nav_grid.shape
-            start_i = int(np.clip(start_i, 0, w - 1))
-            start_j = int(np.clip(start_j, 0, h - 1))
             # Clamp indices
             h, w = nav_grid.shape
             start_i = int(np.clip(start_i, 0, w - 1))
@@ -547,23 +509,10 @@ while robot.step(TIME_STEP) != -1:
                 frontier_cache_time = t
                 if frontier_goal:
                     print(f"[EXPLORE] New frontier found at {frontier_goal}.")
-            if frontier_cache is not None and (t - frontier_cache_time) < FRONTIER_CACHE_DURATION:
-                frontier_goal = frontier_cache
-            else:
-                frontier_goal = find_nearest_frontier(nav_grid, start_i, start_j, visited, True)
-                frontier_cache = frontier_goal
-                frontier_cache_time = t
-                if frontier_goal:
-                    print(f"[EXPLORE] New frontier found at {frontier_goal}.")
 
             if frontier_goal:
                 goal_i, goal_j = frontier_goal
-            if frontier_goal:
-                goal_i, goal_j = frontier_goal
 
-                di = goal_i - start_i
-                dj = goal_j - start_j
-                dist2_cells = di * di + dj * dj
                 di = goal_i - start_i
                 dj = goal_j - start_j
                 dist2_cells = di * di + dj * dj
@@ -575,27 +524,14 @@ while robot.step(TIME_STEP) != -1:
                     state = "EXPLORE"
                     v_left = v_right = 0.0
                     continue
-                if dist2_cells < 9:
-                    print(f"[EXPLORE] Frontier too close (d2={dist2_cells}), marking region visited.")
-                    mark_frontier_region_visited(visited, frontier_goal, radius=40)
-                    frontier_cache = None
-                    state = "EXPLORE"
-                    v_left = v_right = 0.0
-                    continue
 
-                print(f"[EXPLORE] Frontier found at ({goal_i}, {goal_j}). Planning...")
                 print(f"[EXPLORE] Frontier found at ({goal_i}, {goal_j}). Planning...")
 
                 goal_i = int(np.clip(goal_i, 0, w - 1))
                 goal_j = int(np.clip(goal_j, 0, h - 1))
-                goal_i = int(np.clip(goal_i, 0, w - 1))
-                goal_j = int(np.clip(goal_j, 0, h - 1))
 
                 plan_occ = occ.copy()
-                plan_occ = occ.copy()
 
-                goal_safety_radius = 6
-                start_safety_radius = 15
                 goal_safety_radius = 6
                 start_safety_radius = 15
 
@@ -604,17 +540,7 @@ while robot.step(TIME_STEP) != -1:
                 start_c_min = max(0, start_i - start_safety_radius)
                 start_c_max = min(w, start_i + start_safety_radius + 1)
                 plan_occ[start_r_min:start_r_max, start_c_min:start_c_max] = 0
-                start_r_min = max(0, start_j - start_safety_radius)
-                start_r_max = min(h, start_j + start_safety_radius + 1)
-                start_c_min = max(0, start_i - start_safety_radius)
-                start_c_max = min(w, start_i + start_safety_radius + 1)
-                plan_occ[start_r_min:start_r_max, start_c_min:start_c_max] = 0
 
-                goal_r_min = max(0, goal_j - goal_safety_radius)
-                goal_r_max = min(h, goal_j + goal_safety_radius + 1)
-                goal_c_min = max(0, goal_i - goal_safety_radius)
-                goal_c_max = min(w, goal_i + goal_safety_radius + 1)
-                plan_occ[goal_r_min:goal_r_max, goal_c_min:goal_c_max] = 0
                 goal_r_min = max(0, goal_j - goal_safety_radius)
                 goal_r_max = min(h, goal_j + goal_safety_radius + 1)
                 goal_c_min = max(0, goal_i - goal_safety_radius)
@@ -662,32 +588,13 @@ while robot.step(TIME_STEP) != -1:
                     print("[EXPLORE] Frontier unreachable. Spinning to clear map.")
                     state = "AVOID"
                     front_min_range = 0.0
-                    print(f"[EXPLORE] Path found: {len(path)} waypoints.")
-                    mark_frontier_region_visited(visited, frontier_goal, radius=40)
-                    frontier_cache = None
-                    current_wp_idx = 0
-                    last_wp_idx = None
-                    stuck_steps = 0
-                    state = "FOLLOW"
-                else:
-                    mark_frontier_region_visited(visited, frontier_goal, radius=40)
-                    frontier_cache = None
-                    print("[EXPLORE] Frontier unreachable. Spinning to clear map.")
-                    state = "AVOID"
-                    front_min_range = 0.0
 
-            else:
-                print("[EXPLORE] No new frontiers found.")
             else:
                 print("[EXPLORE] No new frontiers found.")
 
                 total_cells = h * w
                 visited_cells = len(visited)
                 visited_percentage = (visited_cells / total_cells) * 100
-                total_cells = h * w
-                visited_cells = len(visited)
-                visited_percentage = (visited_cells / total_cells) * 100
-
 
                 print(f"[EXPLORE] Exploration complete. Returning to Origin.")
 
@@ -801,14 +708,7 @@ while robot.step(TIME_STEP) != -1:
 
                 ri, rj = slam_pose_to_grid(slam_x, slam_y, slam_backend)
                 mark_frontier_region_visited(visited, (ri, rj), radius=40)
-                ri, rj = slam_pose_to_grid(slam_x, slam_y, slam_backend)
-                mark_frontier_region_visited(visited, (ri, rj), radius=40)
 
-                v = 0.0
-                w = 0.0
-                v_left, v_right = compute_wheel_velocities(
-                    v, w, WHEEL_RADIUS, AXLE_LENGTH
-                )
                 v = 0.0
                 w = 0.0
                 v_left, v_right = compute_wheel_velocities(
@@ -818,14 +718,7 @@ while robot.step(TIME_STEP) != -1:
                 state = "AVOID"
                 turn_accumulated = 0.0
                 continue
-                state = "AVOID"
-                turn_accumulated = 0.0
-                continue
 
-                avoid_timer = 0
-            else:
-                if current_wp_idx >= len(path):
-                    v_left, v_right = 0.0, 0.0
                 avoid_timer = 0
             else:
                 if current_wp_idx >= len(path):
@@ -834,16 +727,7 @@ while robot.step(TIME_STEP) != -1:
                     ri, rj = slam_pose_to_grid(slam_x, slam_y, slam_backend)
                     mark_frontier_region_visited(visited, (ri, rj), radius=6)
                     print(f"[INFO] Reached Frontier at ({ri}, {rj}). Marking region & scanning... CURRENT SPIN IS DISABLED!")
-                    ri, rj = slam_pose_to_grid(slam_x, slam_y, slam_backend)
-                    mark_frontier_region_visited(visited, (ri, rj), radius=6)
-                    print(f"[INFO] Reached Frontier at ({ri}, {rj}). Marking region & scanning... CURRENT SPIN IS DISABLED!")
 
-                    state = "EXPLORE"
-                    spin_timer = 0
-                else:
-                    # Current waypoint
-                    wp_i, wp_j = path[current_wp_idx]
-                    wp_x, wp_y = grid_to_world(wp_i, wp_j, slam_backend)
                     state = "EXPLORE"
                     spin_timer = 0
                 else:
@@ -855,27 +739,14 @@ while robot.step(TIME_STEP) != -1:
                     dx_wp = wp_x - slam_x
                     dy_wp = wp_y - slam_y
                     dist = math.hypot(dx_wp, dy_wp)
-                    # Vector to waypoint
-                    dx_wp = wp_x - slam_x
-                    dy_wp = wp_y - slam_y
-                    dist = math.hypot(dx_wp, dy_wp)
 
-                    # Heading calculation
-                    target_heading = math.atan2(dy_wp, dx_wp)
-                    heading_error = target_heading - slam_theta
-                    heading_error = (heading_error + math.pi) % (2 * math.pi) - math.pi
                     # Heading calculation
                     target_heading = math.atan2(dy_wp, dx_wp)
                     heading_error = target_heading - slam_theta
                     heading_error = (heading_error + math.pi) % (2 * math.pi) - math.pi
 
                     is_final_waypoint = (current_wp_idx == len(path) - 1)
-                    is_final_waypoint = (current_wp_idx == len(path) - 1)
 
-                    if not is_final_waypoint:
-                        if dist < 0.15 and abs(heading_error) > math.radians(90):
-                            current_wp_idx += 1
-                            continue
                     if not is_final_waypoint:
                         if dist < 0.15 and abs(heading_error) > math.radians(90):
                             current_wp_idx += 1
@@ -910,13 +781,7 @@ while robot.step(TIME_STEP) != -1:
                     # --- SMOOTH CONTROLLER END ---
 
                     v_left, v_right = compute_wheel_velocities(v, w, WHEEL_RADIUS, AXLE_LENGTH)
-                    v_left, v_right = compute_wheel_velocities(v, w, WHEEL_RADIUS, AXLE_LENGTH)
 
-                    if last_wp_idx == current_wp_idx:
-                        stuck_steps += 1
-                    else:
-                        stuck_steps = 0
-                        last_wp_idx = current_wp_idx
                     if last_wp_idx == current_wp_idx:
                         stuck_steps += 1
                     else:
@@ -928,37 +793,16 @@ while robot.step(TIME_STEP) != -1:
                         current_wp_idx += 1
                         stuck_steps = 0
                         continue
-                    if stuck_steps > STUCK_STEP_LIMIT:
-                        print(f"[FOLLOW] Stuck at waypoint {current_wp_idx}, skipping.")
-                        current_wp_idx += 1
-                        stuck_steps = 0
-                        continue
 
-                    if dist < 0.3:
-                        current_wp_idx += 1
                     if dist < 0.3:
                         current_wp_idx += 1
 
         elif state == "ROTATE_180":
             phase = "Performing 180 Turn"
-        elif state == "ROTATE_180":
-            phase = "Performing 180 Turn"
 
             # 1. Accumulate the absolute rotation
             turn_accumulated += abs(dtheta_for_slam)
-            # 1. Accumulate the absolute rotation
-            turn_accumulated += abs(dtheta_for_slam)
 
-            # 2. Check if we have turned 180 degrees (Pi radians)
-            if turn_accumulated >= math.pi:
-                print("[ROTATE] 180 turn complete. Resuming exploration.")
-                v_left, v_right = 0.0, 0.0
-                state = "EXPLORE"
-            else:
-                # 3. Rotate in place safely
-                v = 0.0
-                w = 0.25
-                v_left, v_right = compute_wheel_velocities(v, w, WHEEL_RADIUS, AXLE_LENGTH)
             # 2. Check if we have turned 180 degrees (Pi radians)
             if turn_accumulated >= math.pi:
                 print("[ROTATE] 180 turn complete. Resuming exploration.")
@@ -975,15 +819,7 @@ while robot.step(TIME_STEP) != -1:
             phase = "360 Scan"
             v_left = -1.0
             v_right = 1.0
-        # STATE: 360 SPIN
-        elif state == "SPIN":
-            phase = "360 Scan"
-            v_left = -1.0
-            v_right = 1.0
 
-            spin_timer += 1
-            # Spin duration
-            duration_steps = int(4000 / TIME_STEP)
             spin_timer += 1
             # Spin duration
             duration_steps = int(4000 / TIME_STEP)
@@ -993,24 +829,7 @@ while robot.step(TIME_STEP) != -1:
                 spin_timer = 0
                 state = "EXPLORE"
                 print("[SPIN] Scan complete. Recalculating frontiers.")
-            if spin_timer > duration_steps:
-                v_left, v_right = 0.0, 0.0
-                spin_timer = 0
-                state = "EXPLORE"
-                print("[SPIN] Scan complete. Recalculating frontiers.")
 
-
-        elif state == "AVOID":
-            phase = "Avoiding Obstacle"
-            if front_min_range is not None and front_min_range < AVOID_MIN_CLEARANCE:
-                v = -0.15
-                w = 0.0
-                v_left, v_right = compute_wheel_velocities(
-                    v, w, WHEEL_RADIUS, AXLE_LENGTH
-                )
-            else:
-                v_left = 0.0
-                v_right = 0.0
         elif state == "AVOID":
             phase = "Avoiding Obstacle"
             if front_min_range is not None and front_min_range < AVOID_MIN_CLEARANCE:
@@ -1046,9 +865,8 @@ while robot.step(TIME_STEP) != -1:
         elif state == "RETURNING_HOME":
             phase = "Auto-Homing"
 
-            # --- SAFETY & STUCK CHECKS ---
+            # SAFETY & STUCK CHECKS 
             # 1. Obstacle Avoidance
-            # Check frontal 'too_close' OR any side objects very close (< 0.18m)
             # Check frontal 'too_close' OR any side objects very close (< 0.18m)
             if too_close or (min_range is not None and min_range < 0.18):
                 print("[RETURN] Obstacle detected. Initiating persistence avoidance.")
@@ -1088,7 +906,7 @@ while robot.step(TIME_STEP) != -1:
                 
                 last_stuck_check_time = t
                 last_stuck_pos = (slam_x, slam_y)
-            # -----------------------------
+
 
             if current_wp_idx >= len(path):
                 print("[RETURN] Arrived at Origin.")
@@ -1171,7 +989,7 @@ while robot.step(TIME_STEP) != -1:
     elif mode == "GUIDE":
         phase = "Guiding Human to Kitchen"
 
-        # --- SUB-STATE: INITIALIZATION ---
+        # SUB-STATE: INITIALIZATION 
         if state == "IDLE":
             print("[GUIDE] Initializing Guidance Sequence...")
 
@@ -1188,7 +1006,6 @@ while robot.step(TIME_STEP) != -1:
             # Dilation/Inflation for safety
             inflation_kernel = np.ones((10, 10), np.uint8)
             hard_obs = (occ == 1).astype(np.uint8)
-            inflated = cv2.dilate(hard_obs, inflation_kernel, iterations=1)
             inflated = cv2.dilate(hard_obs, inflation_kernel, iterations=1)
             occ[inflated == 1] = 1
 
@@ -1281,7 +1098,6 @@ while robot.step(TIME_STEP) != -1:
         elif state == "FETCHING":
             phase = "Fetching Human"
 
-            # Check distance to human
             # Check distance to human
             dist_to_human = math.hypot(slam_x - human_x, slam_y - human_y)
             
@@ -1452,7 +1268,7 @@ while robot.step(TIME_STEP) != -1:
                      state = "GUIDE_AVOID"
                      continue
 
-                # --- 2. Stuck Detection ---
+                # 2. Stuck Detection 
                 if (t - last_stuck_check_time) > 4.0:
                      dx_g = slam_x - last_stuck_pos[0]
                      dy_g = slam_y - last_stuck_pos[1]
@@ -1473,9 +1289,7 @@ while robot.step(TIME_STEP) != -1:
                      
                      last_stuck_check_time = t
                      last_stuck_pos = (slam_x, slam_y)
-                # --------------------------------------
 
-                # Check if arrived
 
                 # Check if arrived
                 if current_wp_idx >= len(path):
@@ -1508,7 +1322,7 @@ while robot.step(TIME_STEP) != -1:
 
                     v_left, v_right = compute_wheel_velocities(v, w, WHEEL_RADIUS, AXLE_LENGTH)
 
-        # --- SUB-STATE: GUIDE AVOID (Mirroring main AVOID) ---
+        #SUB-STATE: GUIDE AVOID 
         elif state == "GUIDE_AVOID":
             phase = "Guide: Avoiding Obstacle"
             # Logic: Backup until 'front_min_range' is safe
@@ -1525,7 +1339,7 @@ while robot.step(TIME_STEP) != -1:
                 turn_accumulated = 0.0
                 print("[GUIDE] Safe distance reached. Turning to break contact.")
 
-        # --- SUB-STATE: GUIDE AVOID TURN ---
+        # SUB-STATE: GUIDE AVOID TURN 
         elif state == "GUIDE_AVOID_TURN":
             phase = "Guide: Avoiding (Turning)"
             
@@ -1544,7 +1358,7 @@ while robot.step(TIME_STEP) != -1:
                  w = 0.5 # Turn Left
                  v_left, v_right = compute_wheel_velocities(v, w, WHEEL_RADIUS, AXLE_LENGTH)
 
-        # --- SUB-STATE: GUIDE AVOID FORWARD ---
+        # SUB-STATE: GUIDE AVOID FORWARD 
         elif state == "GUIDE_AVOID_FORWARD":
             phase = "Guide: Avoiding (Forward)"
             
@@ -1600,7 +1414,6 @@ while robot.step(TIME_STEP) != -1:
 
             # Save to file
             filename = os.path.join(SNAPSHOTS_DIR, f"map_snapshot_{int(t):04d}.png")
-            filename = os.path.join(SNAPSHOTS_DIR, f"map_snapshot_{int(t):04d}.png")
             plt.savefig(filename, dpi=150)
             plt.close()
             print(f"[INFO] Auto-saved map snapshot: {filename}")
@@ -1609,34 +1422,6 @@ while robot.step(TIME_STEP) != -1:
         if SAVE_VIDEO_FRAMES:
             grid = slam_backend.get_map_grid()
 
-            fig, ax = plt.subplots(figsize=(8, 8))
-            ax.imshow(grid, cmap="gray", origin="lower")
-
-            # Draw the Path (Cyan Line)
-            if path and len(path) > 0:
-                path_arr = np.array(path)  # List of (x, y) tuples
-                # Matplotlib plots x as columns (index 0) and y as rows (index 1)
-                ax.plot(path_arr[:, 0], path_arr[:, 1], color='cyan', linewidth=2, label='Path')
-
-            # Draw Social Zones
-            hx_grid, hy_grid = slam_pose_to_grid(human_x, human_y , slam_backend)
-
-            # Convert meters to pixels. Scale = 800px / 20m = 40 px/m
-            pixels_per_meter = slam_backend.MAP_SIZE_PIXELS / slam_backend.MAP_SIZE_METERS
-
-            # Intimate Zone (0.45m) -> Red
-            intimate_radius = 0.45 * pixels_per_meter
-            circ_intimate = plt.Circle((hx_grid, hy_grid), intimate_radius, color='red', fill=False, linewidth=2)
-            ax.add_patch(circ_intimate)
-
-            # Personal Zone (1.2m) -> Green Dashed
-            personal_radius = 1.2 * pixels_per_meter
-            circ_personal = plt.Circle((hx_grid, hy_grid), personal_radius, color='lime', fill=False,
-                                       linestyle='--', linewidth=2)
-            ax.add_patch(circ_personal)
-
-            ax.set_title(f"Social SLAM - {phase}")
-            ax.axis("off")
             fig, ax = plt.subplots(figsize=(8, 8))
             ax.imshow(grid, cmap="gray", origin="lower")
 

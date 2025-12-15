@@ -1,23 +1,11 @@
-<<<<<<< HEAD
-# Copyright 1996-2024 Cyberbotics Ltd.
-# Modified to be PASSIVE (Animation Only)
-=======
->>>>>>> 368f121b1d3599068738306d8ef624b26eaa18d3
 from controller import Supervisor
 import math
 
 class Pedestrian (Supervisor):
-<<<<<<< HEAD
     """Control a Pedestrian PROTO (Passive Animation Mode)."""
 
     def __init__(self):
         """Constructor: initialize constants."""
-=======
-
-
-    def __init__(self):
-
->>>>>>> 368f121b1d3599068738306d8ef624b26eaa18d3
         self.BODY_PARTS_NUMBER = 13
         self.WALK_SEQUENCES_NUMBER = 8
         self.ROOT_HEIGHT = 1.27
@@ -92,13 +80,7 @@ class Pedestrian (Supervisor):
                 self.current_height_offset = self.height_offsets[current_sequence] * (1 - ratio) + \
                     self.height_offsets[(current_sequence + 1) % self.WALK_SEQUENCES_NUMBER] * ratio
                     
-<<<<<<< HEAD
-                # NOTE: We do NOT set 'root_translation' here. We let the Robot do it.
-                # We update rotation to face direction of movement?
-=======
-              
-              
->>>>>>> 368f121b1d3599068738306d8ef624b26eaa18d3
+
                 if move_dist > 0.005:
                     angle = math.atan2(dy, dx)
                     rotation = [0, 0, 1, angle]

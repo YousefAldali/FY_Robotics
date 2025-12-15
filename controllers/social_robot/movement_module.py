@@ -266,12 +266,6 @@ ROOM_GOALS = {
     "living":      (4.80,  6.75),
     "bathroom":    (15.13, 15.25),
     "kitchen":     (4.35,  15.09)
-    "start_point": (10.01, 10.00),  # Start point in hallway
-    "bed1":        (14.52, 4.94),
-    "bed2":        (9.12,  4.58),
-    "living":      (4.80,  6.75),
-    "bathroom":    (15.13, 15.25),
-    "kitchen":     (4.35,  15.09)
 }
 
 

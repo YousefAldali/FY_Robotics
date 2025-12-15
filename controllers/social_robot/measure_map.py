@@ -5,7 +5,7 @@ import yaml
 from PIL import Image
 import matplotlib.pyplot as plt
 
-# ---------- USER INPUTS ----------
+# USER INPUTS 
 MAP_IMAGE_PATH = "/Users/faridkhan/Downloads/FY_Robotics copy 5/controllers/social_robot/map_snapshot_0840.png"
 MAP_YAML_PATH  = None   
 RESOLUTION_M_PER_PX = 0.05   
@@ -17,7 +17,7 @@ GROUND_TRUTH_M = {
 }
 
 
-# --------------------------------
+
 
 def load_resolution(yaml_path):
     with open(yaml_path, "r") as f:
@@ -46,7 +46,6 @@ def dist_px(p1, p2):
 
 # Load image
 img = Image.open(MAP_IMAGE_PATH)
-# Many occupancy maps are grayscale; show as-is
 fig, ax = plt.subplots()
 ax.imshow(img, cmap="gray")
 ax.axis("off")
