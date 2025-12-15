@@ -1,0 +1,17 @@
+# FY Robotics - Dependencies
+
+# Core Scientific Computing
+numpy>=1.24.0
+matplotlib>=3.7.0
+
+# Computer Vision & Image Processing
+opencv-python>=4.8.0
+
+# SLAM Library (Manual Installation Required - See Below)
+# BreezySLAM - Install separately using:
+# git clone https://github.com/simondlevy/BreezySLAM
+# cd BreezySLAM/python
+# sudo python3 setup.py install
+
+# Note: Webots R2023b or later is required (not a Python package)
+# Download from: https://cyberbotics.com/

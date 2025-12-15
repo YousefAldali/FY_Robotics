@@ -1,10 +1,14 @@
-# macOS system files
+# ============================================
+# FY Robotics - Social Navigation Robot
+# ============================================
+
+# ----- macOS system files -----
 .DS_Store
 **/.DS_Store
 
+# ----- BreezySLAM Library (External) -----
 breezyslam/
-
-# BreezySLAM generated files
+BreezySLAM/
 breezyslam/build/
 breezyslam/python/breezyslam/*.pyc
 breezyslam/python/breezyslam/__pycache__/
@@ -15,31 +19,28 @@ breezyslam/examples/*.png
 breezyslam/examples/*.map
 breezyslam/examples/log2pgm
 
-# Ignore BreezySLAM directory (case-sensitive)
-BreezySLAM/
-
-# Compiled object files
+# ----- Compiled Files -----
 *.class
 *.o
 *.so
 
-# Swap files
+# ----- Editor Swap Files -----
 *.swp
 
-# Temporary build files
-python/build/   
+# ----- Temporary Build Files -----
+python/build/
 java/edu/wlu/cs/levy/breezyslam/algorithms/RMHCSLAM.h
 java/edu/wlu/cs/levy/breezyslam/components/Map.h
 java/edu/wlu/cs/levy/breezyslam/components/Scan.h
 
-# IDE files
+# ----- IDE Files -----
 .vscode/
 .idea/
 *.iml
 *.ipr
 *.iws
 
-# Python virtual environments
+# ----- Python Virtual Environments -----
 venv/
 env/
 __pycache__/
@@ -54,7 +55,36 @@ build/
 .pytest_cache/
 .tox/
 
+# ----- Generated Simulation Data -----
+# SLAM video frames
+slam_frames/
+controllers/social_robot/slam_frames/
 
-slam_frames
+# Map snapshots
+map_snapshots/
+controllers/social_robot/map_snapshots/
+
+# Final map outputs
+slam_map_*.png
 map_*.png
+
+# Experiment data logs
+experiment_data_*.csv
+
+# Generated videos
+*.mp4
+slam_exploration_video.mp4
+
+# ----- Webots Generated Files -----
+# Webots world project files (auto-generated)
+worlds/.*.wbproj
+worlds/.*.jpg
+
+# Webots backup files
+*.wbt~
+
+# ----- Unused Controller Directories -----
+# These can be safely removed from the repo
+controllers/mirror/
+controllers/television_switch_on/
 
