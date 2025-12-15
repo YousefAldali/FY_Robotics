@@ -44,11 +44,11 @@ map_saved = False
 frame_index = 0
 video_created = False
 
-# --------------- Data Logging Setup -----------------
+# Data Logging Setup
 experiment_log = []  # List to store data
 print("[INFO] Data logging initialized.")
 
-print("[INFO] Social Python Controller Initialized with TIME_STEP =", TIME_STEP)
+print("[INFO] Social Controller is running. TimeStep:", TIME_STEP)
 
 # Robot physical parameters
 WHEEL_RADIUS = 0.0975  # in meters
@@ -95,7 +95,7 @@ pose_estimator = PoseEstimator(WHEEL_RADIUS, AXLE_LENGTH)
 pose_estimator.x = 10.01
 pose_estimator.y = 10.00
 
-# --------------- Navigation State -----------------
+# Navigation State
 mode = "IDLE"  # Modes: IDLE, EXPLORE, MANUAL, TEST, GUIDE
 state = "EXPLORE"  # States within a mode
 path = []
@@ -114,14 +114,11 @@ turn_accumulated = 0.0
 last_stuck_check_time = 0.0
 last_stuck_pos = (0.0, 0.0)
 
-# Navigation Condition Toggle
-NAV_CONDITION = "BASELINE"   # "SOCIAL" or "BASELINE"
-
 # Profile for social navigation experiments
-# Run 1: "Conservative", Run 2: "Neutral", Run 3: "Open"
-current_profile = "Open"  # <--- EDIT THIS MANUALLY FOR EACH RUN (only used if NAV_CONDITION == "SOCIAL")
 
-# -------------- Utility Function --------------------
+current_profile = "Open"  
+
+# Utility Function
 def reset_navigation_state():
     global left_motor, right_motor, path, current_wp_idx, last_wp_idx, stuck_steps, state, v_left, v_right, frontier_cache, persistent_obstacles
     path = []
@@ -134,13 +131,14 @@ def reset_navigation_state():
     v_right = 0.0
     left_motor.setVelocity(v_left)
     right_motor.setVelocity(v_right)
-    # Note: We do NOT clear 'visited' so the robot remembers the map
+
     
     global last_stuck_check_time, last_stuck_pos
     last_stuck_check_time = 0.0
     last_stuck_pos = (0.0, 0.0)
 
-# --------------- Fetch human node ---------------------------
+
+# Fetch human node
 def find_node_by_name(robot, target_name):
     # Fallback function to find a node by its 'name' field
     root = robot.getRoot()
@@ -164,8 +162,8 @@ def find_node_by_name(robot, target_name):
     n = children.getCount()
     for i in range(n):
         node = children.getMFNode(i)
-        # Check if node has 'name' field
-        # Only Solid nodes have names.
+
+
         if node.getTypeName() in ["Solid", "Robot", "Supervisor", "Pedestrian"]: 
              pass
         
@@ -175,7 +173,7 @@ def find_node_by_name(robot, target_name):
             val = name_field.getSFString()
             if val == target_name:
                 return node
-            # Also try case-insensitive or common variants if target is generic
+
             if target_name.lower() == "pedestrian" and val == "Pedestrian":
                 return node
     return None
@@ -205,12 +203,12 @@ if human_node is None:
 else:
     human_trans_field = human_node.getField("translation")
     initial_pos = human_trans_field.getSFVec3f()
-    human_z = initial_pos[2]  # Should be 1.27 based on your file
+    human_z = initial_pos[2]  
     initial_y = initial_pos[1]
-    # --- FIX: INVERT COORDINATES ---
-    # Robot is rotated 180 deg. World +X is Map -X.
-    # Formula: Map = Offset - World
-    human_x = MAP_OFFSET_X - initial_pos[0]  # 10 - 4.82 = 5.18
+
+
+
+    human_x = MAP_OFFSET_X - initial_pos[0]  
     human_y = MAP_OFFSET_Y + initial_pos[1]
 
     print(f"[INFO] Human detected at Webots({initial_pos[0]:.2f}, {initial_pos[1]:.2f})"
@@ -218,16 +216,17 @@ else:
     
     # VERIFY CONTROL
     try:
-        # Try to nudge the human slightly to prove we have control
+
         human_trans_field.setSFVec3f(initial_pos)
         print("[SUCCESS] Human translation field is writable.")
     except Exception as e:
         print(f"[ERROR] Could not write to Human translation field: {e}")
 
-# --------------- Complementary Filter Setup -----------------
+# Complementary Filter Setup
 fused_theta = 0.0
 prev_fused_theta = 0.0
 alpha = 0.98  
+
 
 imu_offset = 0.0
 if imu:
@@ -239,9 +238,8 @@ if imu:
 visited = set()
 persistent_obstacles = set()  # Stores (grid_i, grid_j) tuples of known return-path blockages
 
-print("\n" + "="*50)
 print("ROBOT CONTROL MODES")
-print("="*50)
+print("-" * 20)
 print("Press 'E' - EXPLORE mode (autonomous exploration)")
 print("Press 'M' - MANUAL mode (drive with WASD keys)")
 print("Press 'T' - TEST mode (not yet implemented)")
@@ -253,9 +251,9 @@ print("  'S' - Move backward")
 print("  'A' - Turn left")
 print("  'D' - Turn right")
 print("  'X' - Stop")
-print("="*50 + "\n")
+print("-" * 20 + "\n")
 
-# --------------- Main Loop -----------------
+# Main Loop
 while robot.step(TIME_STEP) != -1:
     t = robot.getTime()
     key = keyboard.getKey()
@@ -284,6 +282,13 @@ while robot.step(TIME_STEP) != -1:
         if mode != "GUIDE":
             print("[MODE] Switching to GUIDE mode")
             reset_navigation_state()  # Reset state
+            
+            # --- NEW: Clear memory to ensure fresh start ---
+            persistent_obstacles.clear()
+            visited.clear()
+            print("[GUIDE] Memory cleared (persistent obstacles & visited nodes reset).")
+            # -----------------------------------------------
+            
             mode = "GUIDE"
             state = "FETCHING" # Triggers the human fetching state in the loop
 
@@ -307,16 +312,17 @@ while robot.step(TIME_STEP) != -1:
         inflation_kernel = np.ones((10, 10), np.uint8)
         hard_obs = (occ == 1).astype(np.uint8)
         inflated = cv2.dilate(hard_obs, inflation_kernel, iterations=1)
+        inflated = cv2.dilate(hard_obs, inflation_kernel, iterations=1)
         occ[inflated == 1] = 1
 
-        # Apply Persistent Obstacles (Blacklist)
+        #  Persistent Obstacles 
         for (obs_i, obs_j) in persistent_obstacles:
-            # Mark a small radius around the known blockage
+            # Marked a small radius around the known blockage
             for di in range(-4, 5):
                 for dj in range(-4, 5):
                     ni, nj = obs_i + di, obs_j + dj
                     if 0 <= ni < h and 0 <= nj < w:
-                        occ[nj, ni] = 1 # Mark as occupied (note: grid is y,x so j,i)
+                        occ[nj, ni] = 1 
 
         # Plan
         planner = OccupancyAStarPlanner(occ)
@@ -325,10 +331,11 @@ while robot.step(TIME_STEP) != -1:
         if raw_path:
             path = [raw_path[0]] + raw_path[5::5] + [raw_path[-1]]
             current_wp_idx = 0
-            state = "RETURNING_HOME"  # Triggers the return state
+            state = "RETURNING_HOME"  
         else:
             print("[RETURN] Path planning failed (Start/Goal blocked?). Stopping.")
             state = "DONE"
+
 
     # 1) Read encoders & update odometry 
     left_val = left_encoder.getValue()
@@ -384,14 +391,11 @@ while robot.step(TIME_STEP) != -1:
     dist_to_robot = math.hypot(slam_x - human_x, slam_y - human_y)
     HUMAN_STOP_DIST = 1.0  # Human stops if closer than this to robot
 
-    # Only move the human if we are in GUIDE mode and actually LEADING
-    # User requested ONLY Guide Mode behavior (No Manual following)
+   
     should_human_move = (mode == "GUIDE" and state == "GUIDING")
 
-    # (Debug prints removed to reduce console spam)
 
-    # Movement logic is now handled in the 'human_node' update block below (line 426+)
-    # This prevents duplicate calculations or conflicts.
+    # Movement is handled below to avoid conflicts
     pass
 
     dist_to_human = dist_to_robot # Update variable for logging
@@ -400,6 +404,19 @@ while robot.step(TIME_STEP) != -1:
     experiment_log.append([t, slam_x, slam_y, slam_theta, dist_to_human])
 
     if human_node is not None:
+        # --- FIX: Live Update of Human Position in GUIDE Mode ---
+        # If we are trying to FETCH the human, we must know where they ARE right now.
+        # (The initial read at startup is not enough if they moved)
+        if mode == "GUIDE" and state != "GUIDING":
+            current_pos = human_trans_field.getSFVec3f()
+            # Convert Webots (World) -> SLAM (Map)
+            # Webots X is Map -X (based on offset)
+            # Webots Y is Map Y - Offset? No, let's invert the formula from init:
+            # human_x = MAP_OFFSET_X - initial_pos[0]
+            # human_y = MAP_OFFSET_Y + initial_pos[1]
+            human_x = MAP_OFFSET_X - current_pos[0]
+            human_y = MAP_OFFSET_Y + current_pos[1]
+
         if should_human_move:
             # Update position using "Smooth Follow" logic
             # 1. Get Robot Heading (using SLAM theta which is accurate)
@@ -443,7 +460,6 @@ while robot.step(TIME_STEP) != -1:
             human_trans_field.setSFVec3f([webots_x, webots_y, human_z])
 
     # 5) High-level state machine
-    # Only run state machine if in EXPLORE mode
     if mode == "EXPLORE":
         if state == "EXPLORE":
             phase = "Calculating Frontier"
@@ -466,32 +482,24 @@ while robot.step(TIME_STEP) != -1:
             occ = np.zeros_like(grid, dtype=np.uint8)
 
             # Identify Walls (Hard Obstacles)
-            # Mark anything that isn't "definitely free" as a potential obstacle
             occ[grid <= 100] = 1
             occ[grid > 100] = 0
 
             # Create "Lava" (Hard Safety Limit) - SMALL
-            # This is the physical "do not touch" zone. Keep it small for doors.
             # 12x12 = ~15cm radius. Just enough so wheels don't clip.
             hard_kernel = np.ones((8, 8), np.uint8)
             hard_obs = (occ == 1).astype(np.uint8)
             hard_inflated = cv2.dilate(hard_obs, hard_kernel, iterations=1)
 
-            # Create "Grass" (Soft Buffer) - LARGE
-            # This pushes the robot to the center.
             # 30x30 = ~40cm radius. Overlaps walls but leaves center clear.
             soft_kernel = np.ones((30, 30), np.uint8)
             soft_inflated = cv2.dilate(hard_obs, soft_kernel, iterations=1)
 
             # Combine into final Map
-            # First set everything to 0 (Free)
             occ[:] = 0
-            # Set Soft Buffer to 2 (Expensive)
             occ[soft_inflated == 1] = 2
-            # Set Hard Walls to 1 (Impassable) - Overwrites the soft buffer
             occ[hard_inflated == 1] = 1
 
-            # Binary nav grid for frontier detection: 1 = free, 0 = not free
             nav_grid = (occ == 1).astype(np.uint8)
 
             start_i, start_j = slam_pose_to_grid(slam_x, slam_y, slam_backend)
@@ -552,12 +560,9 @@ while robot.step(TIME_STEP) != -1:
 
                 # Choose the planner based on Mode
                 if mode == "GUIDE" or mode == "SOCIAL_TEST":
-                    # Use the NEW Social Brain
-                    # This forces the robot to path AROUND the human bubble
                     planner = SocialAStarPlanner(plan_occ, (human_grid_x, human_grid_y), profile="Neutral")
                     print("[PLANNER] Using Social A* (Avoiding Human)")
                 else:
-                    # EXPLORE mode keeps using the OLD Standard Brain
                     # This ensures your baseline remains exactly as it is now
                     planner = OccupancyAStarPlanner(plan_occ)
                     print("[PLANNER] Using Standard A*")
@@ -596,6 +601,7 @@ while robot.step(TIME_STEP) != -1:
                 visited_cells = len(visited)
                 visited_percentage = (visited_cells / total_cells) * 100
 
+
                 print(f"[EXPLORE] Exploration complete. Returning to Origin.")
 
                 # Get the start position from configs.
@@ -613,7 +619,6 @@ while robot.step(TIME_STEP) != -1:
                 goal_j = int(np.clip(goal_j, 0, h - 1))
 
                 # Get Map and Inflate for Safety
-                # (Reuses the occupancy generation logic in EXPLORE state)
                 occ = np.zeros_like(grid, dtype=np.uint8)
                 occ[grid <= 100] = 1
                 occ[grid >= 230] = 0
@@ -622,43 +627,14 @@ while robot.step(TIME_STEP) != -1:
                 inflated = cv2.dilate(hard_obs, inflation_kernel, iterations=1)
                 occ[inflated == 1] = 1
                 
-                # CRITICAL FIX: Use 'visited' set to block known stuck areas during Return
-                # The 'visited' set contains (i, j) tuples of places we've been.
-                # If we got stuck there, we likely marked it.
-                # However, 'visited' also covers good places. We initially only marked stuck places in EXPLORE.
-                # But to be safe, let's just assume if we are stuck logic triggered mark_frontier_region_visited,
-                # it should be avoided.
-                # A better approach is to rely on the fact that if we replan, A* will find a path.
-                # The issue is if the START is blocked.
                 
-                # Apply visited mask (optional, but requested for robustness)
-                # Note: modifying occ based on visited might block valid paths home if we visited them safely.
-                # So we only apply it if we are STUCK. 
-                # Actually, the 'mark_frontier_region_visited' call in stuck logic adds to 'visited'.
-                # Let's map 'visited' points to obstacles in 'occ'.
                 h_occ, w_occ = occ.shape
                 for (vi, vj) in visited:
                      if 0 <= vi < w_occ and 0 <= vj < h_occ:
-                         # We only want to block it if it was marked as "BAD" by stuck logic.
-                         # Since 'visited' mixes good and bad, this is risky.
-                         # BUT, since the user wants to avoid "stuck loops", blocking re-entry to where we were is good.
-                         # Let's explicitly block the immediate area where we are stuck (handled by the stuck logic calling mark_frontier).
-                         # Here we just apply it.
-                         # To avoid blocking the WHOLE map, maybe we shouldn't apply ALL visited.
-                         # Strategy: The stuck logic marked it. We just need to ensure the planner sees it.
-                         # Issue: 'visited' is just a set.
-                         # Let's trust the AVOID_TURN to break the loop for now.
-                         # If we really want to blacklist, we should have a 'blacklist' set.
-                         # Using 'visited' to block path is too aggressive (blocks return path).
+         
                          pass
                 
-                # INSTEAD: We rely on the fact that we moved to EXPLORE state.
-                # The Plan: EXPLORE state will trigger. It will see "Time Limit". It will come HERE.
-                # We need to make sure we don't plan the EXACT SAME path.
-                # The AVOID_TURN moves us. The start node changes. The path changes.
-                # So we likely don't need to mod 'occ' with 'visited' heavily.
-                # But let's add a small 'stochastic' cost or dilation if needed?
-                # No, let's stick to the plan: AVOID_TURN breaks the loop.
+              
                 pass
 
                 # Plan
@@ -678,8 +654,7 @@ while robot.step(TIME_STEP) != -1:
         elif state == "FOLLOW":
             phase = "Following Path"
             
-            # --- GLOBAL STUCK DETECTION ---
-            # Check every 5 seconds if we have moved
+            #  GLOBAL STUCK DETECTION 
             if (t - last_stuck_check_time) > 5.0:
                 dx_stuck = slam_x - last_stuck_pos[0]
                 dy_stuck = slam_y - last_stuck_pos[1]
@@ -688,7 +663,6 @@ while robot.step(TIME_STEP) != -1:
                 if dist_moved < 0.2:
                     print(f"[STUCK] Global stuck detected (moved {dist_moved:.2f}m in 5s). Force replanning.")
                     ri, rj = slam_pose_to_grid(slam_x, slam_y, slam_backend)
-                    # Mark area as visited so we don't just plan back through it instantly
                     mark_frontier_region_visited(visited, (ri, rj), radius=30)
                     frontier_cache = None
                     state = "EXPLORE"
@@ -752,11 +726,10 @@ while robot.step(TIME_STEP) != -1:
                             current_wp_idx += 1
                             continue
 
-                    # --- SMOOTH CONTROLLER START ---
+                    # SMOOTH CONTROLLER START 
                     # Instead of stopping completely for small errors, we slow down.
                     
                     # 1. Calculate Turn Speed (w)
-                    # Proportional control on heading error
                     w = -heading_error * 2.5 
                     
                     # Clamp rotation speed (allow faster turning than before)
@@ -764,21 +737,16 @@ while robot.step(TIME_STEP) != -1:
                     w = max(min(w, MAX_ROT_SPEED), -MAX_ROT_SPEED)
 
                     # 2. Calculate Linear Speed (v)
-                    # Base speed based on distance to target (slow down when close)
                     v_base = min(dist * 1.5, 0.5)
                     
                     # Slow down significantly if we are turning sharp
-                    # If error is > 45 degrees (0.8 rad), v drops to 0
-                    # This replaces the hard "if error > 0.35 then stop" check
                     turn_penalty = max(0.0, 1.0 - (abs(heading_error) / 1.0))
                     v = v_base * turn_penalty
                     
-                    # Ensure we don't stall completely if error is huge (optional, but good for flow)
-                    # But for safety, let's keep it 0 if error is very large (> 60 deg)
                     if abs(heading_error) > 1.2:
                          v = 0.0
 
-                    # --- SMOOTH CONTROLLER END ---
+                    #SMOOTH CONTROLLER END 
 
                     v_left, v_right = compute_wheel_velocities(v, w, WHEEL_RADIUS, AXLE_LENGTH)
 
@@ -830,6 +798,7 @@ while robot.step(TIME_STEP) != -1:
                 state = "EXPLORE"
                 print("[SPIN] Scan complete. Recalculating frontiers.")
 
+
         elif state == "AVOID":
             phase = "Avoiding Obstacle"
             if front_min_range is not None and front_min_range < AVOID_MIN_CLEARANCE:
@@ -867,14 +836,10 @@ while robot.step(TIME_STEP) != -1:
 
             # SAFETY & STUCK CHECKS 
             # 1. Obstacle Avoidance
-            # Check frontal 'too_close' OR any side objects very close (< 0.18m)
             if too_close or (min_range is not None and min_range < 0.18):
                 print("[RETURN] Obstacle detected. Initiating persistence avoidance.")
                 
-                # BLACKLIST: Mark this collision point as a persistent obstacle
                 ci, cj = slam_pose_to_grid(slam_x, slam_y, slam_backend)
-                # We add the CURRENT location (or slightly forward) to the blacklist
-                # Let's verify if we can project forward based on theta
                 proj_dist = 0.3 # Look ahead 30cm
                 proj_x = slam_x + proj_dist * math.cos(slam_theta)
                 proj_y = slam_y + proj_dist * math.sin(slam_theta)
@@ -899,14 +864,14 @@ while robot.step(TIME_STEP) != -1:
                     ri, rj = slam_pose_to_grid(slam_x, slam_y, slam_backend)
                     mark_frontier_region_visited(visited, (ri, rj), radius=30)
                     
-                    state = "EXPLORE" # Will trigger 'Time Limit' logic to re-plan home
+                    state = "EXPLORE" 
                     last_stuck_check_time = t
                     last_stuck_pos = (slam_x, slam_y)
                     continue
                 
                 last_stuck_check_time = t
                 last_stuck_pos = (slam_x, slam_y)
-
+            # -----------------------------
 
             if current_wp_idx >= len(path):
                 print("[RETURN] Arrived at Origin.")
@@ -947,7 +912,7 @@ while robot.step(TIME_STEP) != -1:
 
     # Handle other modes (MANUAL, TEST, GUIDE)
     elif mode == "MANUAL":
-        # Manual mode - control robot with WASD keys
+        # Manual mode 
         phase = "Manual Driving"
 
         # Manual control speeds
@@ -1007,10 +972,10 @@ while robot.step(TIME_STEP) != -1:
             inflation_kernel = np.ones((10, 10), np.uint8)
             hard_obs = (occ == 1).astype(np.uint8)
             inflated = cv2.dilate(hard_obs, inflation_kernel, iterations=1)
+            inflated = cv2.dilate(hard_obs, inflation_kernel, iterations=1)
             occ[inflated == 1] = 1
 
             # Apply Persistent Obstacles (Blacklist) - Guide Mode
-            # This ensures that if we got stuck and replanned, we don't pick the same path
             h, w = grid.shape
             for (obs_i, obs_j) in persistent_obstacles:
                 for di in range(-4, 5):
@@ -1022,18 +987,13 @@ while robot.step(TIME_STEP) != -1:
             # 3. Plan using Phase 2 Social Planner
             h_grid = slam_pose_to_grid(human_x, human_y, slam_backend)
 
-            # Use the globally defined current_profile (set at top of file)
-            if NAV_CONDITION == "BASELINE":
-                planner = OccupancyAStarPlanner(occ)
-                print("[PLANNER] BASELINE: Occupancy A* (no proxemics)")
-            else:
-                planner = SocialAStarPlanner(occ, h_grid, profile=current_profile)
-                print(f"[PLANNER] SOCIAL A*: profile={current_profile}")
+
+            planner = SocialAStarPlanner(occ, h_grid, profile=current_profile)
 
             raw_path = planner.plan((start_i, start_j), (goal_i, goal_j))
 
             if raw_path and len(raw_path) > 1:
-                # Downsample path for smoother following
+
                 path = [raw_path[0]] + raw_path[5::5]
                 if path[-1] != raw_path[-1]: path.append(raw_path[-1])
 
@@ -1054,7 +1014,7 @@ while robot.step(TIME_STEP) != -1:
                 inflated_rescue = cv2.dilate(hard_obs_rescue, rescue_kernel, iterations=1)
                 occ_rescue[inflated_rescue == 1] = 1
                 
-                # Apply Persistent Obstacles even in Rescue Mode (Still unsafe to hit known walls)
+                # Apply Persistent Obstacles even in Rescue Mode 
                 for (obs_i, obs_j) in persistent_obstacles:
                      for di in range(-2, 3): # Smaller blacklist radius (2px)
                         for dj in range(-2, 3):
@@ -1063,13 +1023,7 @@ while robot.step(TIME_STEP) != -1:
                                 occ_rescue[nj, ni] = 1
 
                 # Re-Plan
-                if NAV_CONDITION == "BASELINE":
-                    planner_rescue = OccupancyAStarPlanner(occ_rescue)
-                    print("[PLANNER] BASELINE RESCUE: Occupancy A*")
-                else:
-                    planner_rescue = SocialAStarPlanner(occ_rescue, h_grid, profile=current_profile)
-                    print(f"[PLANNER] SOCIAL RESCUE: profile={current_profile}")
-
+                planner_rescue = SocialAStarPlanner(occ_rescue, h_grid, profile=current_profile)
                 raw_path_rescue = planner_rescue.plan((start_i, start_j), (goal_i, goal_j))
                 
                 if raw_path_rescue and len(raw_path_rescue) > 1:
@@ -1081,7 +1035,7 @@ while robot.step(TIME_STEP) != -1:
                 else:
                     print("[GUIDE] Rescue failed. Path blocked. Waiting (IDLE) to retry...")
                     # Do NOT switch to Manual. Just wait and retry.
-                    # Also, maybe the persistent obstacles are wrong? Let's clear them to give it a fresh start.
+
                     if len(persistent_obstacles) > 0:
                         print("[GUIDE] Clearing obstacle memory to attempt fresh plan next cycle.")
                         persistent_obstacles.clear()
@@ -1090,24 +1044,22 @@ while robot.step(TIME_STEP) != -1:
                     mode = "GUIDE" # Ensure we stay in Guide
                     v_left, v_right = 0.0, 0.0
                     path = []
-                    # Add a small pause to avoid spamming
-                    # We can't sleep, but we can rely on IDLE's natural flow (it replans instantly)
-                    # Maybe we should set a timer? 
                     last_stuck_check_time = t # Reset stuck timer
 
         elif state == "FETCHING":
             phase = "Fetching Human"
 
+
             # Check distance to human
             dist_to_human = math.hypot(slam_x - human_x, slam_y - human_y)
             
-            # DEBUG: Why is it skipping?
+
             if int(t*10) % 20 == 0:
                  print(f"[FETCH] Dist to Human: {dist_to_human:.2f}m")
 
             if dist_to_human < 1.5:
                 print("[FETCH] Arrived at Human. Planning to Kitchen...")
-                state = "IDLE"  # This triggers the existing Kitchen planning logic
+                state = "IDLE"  
                 v_left, v_right = 0.0, 0.0
 
             elif not path:
@@ -1115,45 +1067,43 @@ while robot.step(TIME_STEP) != -1:
                 h_i, h_j = slam_pose_to_grid(human_x, human_y, slam_backend)
                 s_i, s_j = slam_pose_to_grid(slam_x, slam_y, slam_backend)
 
-                # --- FIX: Generate Safer Map ---
+                # FIX: Generate Safer Map
                 grid = slam_backend.get_map_grid()
                 # Create occupancy grid: 0=free, 1=obstacle, 2=unknown
                 occ = np.zeros_like(grid, dtype=np.uint8)
 
                 # Identify Walls (Hard Obstacles)
-                # Mark anything that isn't "definitely free" as a potential obstacle
+
                 occ[grid <= 100] = 1
                 occ[grid > 100] = 0
 
                 # Create "Lava" (Hard Safety Limit) - SMALL
-                # This is the physical "do not touch" zone. Keep it small for doors.
                 # 12x12 = ~15cm radius. Just enough so wheels don't clip.
                 hard_kernel = np.ones((8, 8), np.uint8)
                 hard_obs = (occ == 1).astype(np.uint8)
                 hard_inflated = cv2.dilate(hard_obs, hard_kernel, iterations=1)
 
                 # Create "Grass" (Soft Buffer) - LARGE
-                # This pushes the robot to the center.
                 # 30x30 = ~40cm radius. Overlaps walls but leaves center clear.
                 soft_kernel = np.ones((30, 30), np.uint8)
                 soft_inflated = cv2.dilate(hard_obs, soft_kernel, iterations=1)
 
                 # Combine into final Map
-                # First set everything to 0 (Free)
+                # First set everything to 0 
                 occ[:] = 0
-                # Set Soft Buffer to 2 (Expensive)
+                # Set Soft Buffer to 2 
                 occ[soft_inflated == 1] = 2
-                # Set Hard Walls to 1 (Impassable) - Overwrites the soft buffer
+                # Set Hard Walls to 1 
                 occ[hard_inflated == 1] = 1
 
                 # Use Standard Planner
                 planner = OccupancyAStarPlanner(occ)
-                # Check if human is inside obstacles (Furniture + Legs)
+                # Check if human is inside obstacles 
                 if occ[h_j, h_i] == 1:
                     print(f"[FETCH] Target ({h_i},{h_j}) is blocked by furniture. Searching for open space...")
 
-                    # FIX: Increase radius to 80 (2.0 meters) to escape the furniture ring
-                    # This finds the "entrance" to the seating area
+
+
                     found_goal = find_nearest_free_cell(occ, h_i, h_j, max_radius=80)
 
                     if found_goal:
@@ -1161,13 +1111,18 @@ while robot.step(TIME_STEP) != -1:
                         h_i, h_j = found_goal
                     else:
                         print("[FETCH] CRITICAL: Human is completely walled off! Cannot find path.")
+                
+                # --- Restored missing line ---
                 raw_path = planner.plan((s_i, s_j), (h_i, h_j))
+                
                 if raw_path:
                     path = raw_path[5::5]
                     current_wp_idx = 0
                 else:
-                    print("[FETCH] Path planning failed (Target unreachable). Stopping.")
-                    mode = "MANUAL"  # Stop the infinite loop
+                    print("[FETCH] Path planning failed (Target unreachable). Skipping Fetch.")
+                    # mode = "MANUAL"  <-- Prevent breaking the flow
+                    state = "IDLE" # Force regular guide start (assume user might move human close)
+                    v_left, v_right = 0.0, 0.0
 
             else:
                 # Current waypoint
@@ -1227,16 +1182,15 @@ while robot.step(TIME_STEP) != -1:
             v_right = 0.0
             phase = "Done"
 
-            # Data is already being saved periodically, no need to save again here
+
 
             if key == ord('R'):
                 state = "EXPLORE"
                 print("[USER] Restarting Exploration.")
 
-        # --- SUB-STATE: GUIDING ---
+        # SUB-STATE: GUIDING
         elif state == "GUIDING":
             # PHASE 3 KEY FEATURE: WAIT FOR HUMAN
-            # If the human lags behind (> 2.5m), robot stops.
             MAX_SEPARATION = 2.5
 
             if dist_to_human > MAX_SEPARATION:
@@ -1248,15 +1202,12 @@ while robot.step(TIME_STEP) != -1:
             else:
                 phase = "Leading to Kitchen"
 
-                # --- 1. Obstacle Avoidance (New Guide Mode Feature) ---
-                # Should mirror Return Home Safety logic
+                # 1. Obstacle Avoidance (New Guide Mode Feature)
                 if too_close or (min_range is not None and min_range < 0.18):
                      print("[GUIDE] Obstacle detected! Initiating Avoidance maneuver.")
                      
-                     # BLACKLIST: Mark this collision point as a persistent obstacle
                      ci, cj = slam_pose_to_grid(slam_x, slam_y, slam_backend)
                      
-                     # Project forward slightly to mark the WALL not the robot center
                      proj_dist = 0.35
                      proj_x = slam_x + proj_dist * math.cos(slam_theta)
                      proj_y = slam_y + proj_dist * math.sin(slam_theta)
@@ -1268,7 +1219,7 @@ while robot.step(TIME_STEP) != -1:
                      state = "GUIDE_AVOID"
                      continue
 
-                # 2. Stuck Detection 
+                # 2. Stuck Detection
                 if (t - last_stuck_check_time) > 4.0:
                      dx_g = slam_x - last_stuck_pos[0]
                      dy_g = slam_y - last_stuck_pos[1]
@@ -1277,7 +1228,6 @@ while robot.step(TIME_STEP) != -1:
                      if dist_moved_g < 0.15:
                          print(f"[GUIDE] Stuck detected in kitchen path ({dist_moved_g:.2f}m). Force replanning.")
                          
-                         # BLACKLIST: Mark this stuck location as a persistent obstacle
                          si, sj = slam_pose_to_grid(slam_x, slam_y, slam_backend)
                          print(f"[GUIDE] Blacklisting stuck spot at ({si}, {sj})")
                          persistent_obstacles.add((si, sj))
@@ -1290,8 +1240,8 @@ while robot.step(TIME_STEP) != -1:
                      last_stuck_check_time = t
                      last_stuck_pos = (slam_x, slam_y)
 
-
                 # Check if arrived
+
                 if current_wp_idx >= len(path):
                     print("[GUIDE] Destination Reached.")
                     state = "DONE"
@@ -1322,12 +1272,10 @@ while robot.step(TIME_STEP) != -1:
 
                     v_left, v_right = compute_wheel_velocities(v, w, WHEEL_RADIUS, AXLE_LENGTH)
 
-        #SUB-STATE: GUIDE AVOID 
+        # SUB-STATE: GUIDE AVOID
         elif state == "GUIDE_AVOID":
             phase = "Guide: Avoiding Obstacle"
-            # Logic: Backup until 'front_min_range' is safe
-            # We use front_min_range from global scan
-            # INCREASED BACKUP DISTANCE: 0.4m clearance to ensure we are really out of the wall
+
             if front_min_range is not None and front_min_range < 0.40:
                 v = -0.20 # Faster backup
                 w = 0.0
@@ -1339,17 +1287,16 @@ while robot.step(TIME_STEP) != -1:
                 turn_accumulated = 0.0
                 print("[GUIDE] Safe distance reached. Turning to break contact.")
 
-        # SUB-STATE: GUIDE AVOID TURN 
+        # SUB-STATE: GUIDE AVOID TURN
         elif state == "GUIDE_AVOID_TURN":
             phase = "Guide: Avoiding (Turning)"
             
-            # Rotate for a bit to face a new direction
+
             turn_accumulated += abs(dtheta_for_slam)
             
-            # Turn ~90 degrees (1.57 rad)
+
             if turn_accumulated >= 1.5:
                  v_left, v_right = 0.0, 0.0
-                 # After turning, we go FORWARD
                  state = "GUIDE_AVOID_FORWARD"
                  avoid_fwd_start = (slam_x, slam_y)
                  print("[GUIDE] Turn complete. Moving FORWARD to clear area.")
@@ -1358,7 +1305,7 @@ while robot.step(TIME_STEP) != -1:
                  w = 0.5 # Turn Left
                  v_left, v_right = compute_wheel_velocities(v, w, WHEEL_RADIUS, AXLE_LENGTH)
 
-        # SUB-STATE: GUIDE AVOID FORWARD 
+        # SUB-STATE: GUIDE AVOID FORWARD
         elif state == "GUIDE_AVOID_FORWARD":
             phase = "Guide: Avoiding (Forward)"
             
@@ -1370,11 +1317,11 @@ while robot.step(TIME_STEP) != -1:
             # Move 0.5 meters forward
             if dist_av >= 0.5:
                 v_left, v_right = 0.0, 0.0
-                state = "IDLE" # NOW we re-plan
+                state = "IDLE" 
                 print("[GUIDE] Avoidance Move complete. Forcing Re-plan.")
             else:
                 
-                # Check for obstacle while moving forward! (Don't hit another wall)
+
                 if front_min_range is not None and front_min_range < 0.25:
                      print("[GUIDE] Obstacle while moving forward! Stopping avoidance move.")
                      state = "IDLE"
@@ -1385,7 +1332,7 @@ while robot.step(TIME_STEP) != -1:
                     v_left, v_right = compute_wheel_velocities(v, w, WHEEL_RADIUS, AXLE_LENGTH)
 
     else:
-        # IDLE mode or unknown
+
         v_left = v_right = 0.0
         phase = "Idle"
 
@@ -1460,12 +1407,7 @@ while robot.step(TIME_STEP) != -1:
         # Save experiment data periodically
         if int(t) % 10 == 0:  # Save every 10 seconds
             if experiment_log:
-                # OLD:
-                # with open('experiment_data.csv', 'w', newline='') as f:
-
-                # NEW: Include profile name in filename
-                tag = current_profile.lower() if NAV_CONDITION == "SOCIAL" else "baseline"
-                filename = f"experiment_data_{tag}.csv"
+                filename = f'experiment_data_{current_profile.lower()}.csv'
                 with open(filename, 'w', newline='') as f:
                     writer = csv.writer(f)
                     writer.writerow(["Time", "X", "Y", "Theta", "DistHuman"])
