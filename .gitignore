@@ -67,6 +67,7 @@ controllers/social_robot/map_snapshots/
 # Final map outputs
 slam_map_*.png
 map_*.png
+map_snapshots
 
 # Experiment data logs
 experiment_data_*.csv

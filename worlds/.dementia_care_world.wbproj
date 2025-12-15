@@ -11,3 +11,4 @@ consoles: Console:All:All
 renderingDevicePerspectives: mirror:camera;0;0.125;0;0
 renderingDevicePerspectives: mirror:display;0;0.125;0;0
 renderingDevicePerspectives: television:display;0;0.653061;0;0
+renderingDevicePerspectives: television:display;0;0.653061;0;0
